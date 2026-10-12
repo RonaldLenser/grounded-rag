@@ -206,3 +206,14 @@ def test_search_query_can_use_the_hnsw_index() -> None:
         return output
 
     assert "ix_chunks_embedding_hnsw" in asyncio.run(plan())
+
+
+def test_search_rate_limit_is_per_client(api: TestClient) -> None:
+    from grounded.api.rate_limit import SlidingWindowRateLimiter
+
+    collection_id = _seeded(api)
+    api.app.state.rate_limiters["search"] = SlidingWindowRateLimiter(limit=1)  # type: ignore[attr-defined]
+    url = f"/v1/collections/{collection_id}/search"
+
+    assert api.post(url, json={"query": "risk"}).status_code == 200
+    assert api.post(url, json={"query": "risk"}).status_code == 429

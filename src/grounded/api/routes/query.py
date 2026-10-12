@@ -2,9 +2,10 @@
 
 import uuid
 
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends
 
 from grounded.api.deps import AnswererDep
+from grounded.api.rate_limit import rate_limit
 from grounded.schemas.collections import ErrorResponse
 from grounded.schemas.query import (
     Citation,
@@ -21,7 +22,8 @@ router = APIRouter(prefix="/v1", tags=["query"])
 @router.post(
     "/collections/{collection_id}/query",
     response_model=QueryResponse,
-    responses={code: {"model": ErrorResponse} for code in (404, 422, 502, 503)},
+    responses={code: {"model": ErrorResponse} for code in (404, 422, 429, 502, 503)},
+    dependencies=[Depends(rate_limit("query"))],
 )
 async def query(
     collection_id: uuid.UUID, body: QueryRequest, answerer: AnswererDep

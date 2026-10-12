@@ -15,6 +15,14 @@ import sys
 import structlog
 
 
+def add_severity(
+    _: object, __: str, event_dict: structlog.typing.EventDict
+) -> structlog.typing.EventDict:
+    """Google Cloud Logging reads `severity` from JSON logs to color/filter by level."""
+    event_dict["severity"] = str(event_dict.get("level", "info")).upper()
+    return event_dict
+
+
 def configure_logging(level: str, json_logs: bool) -> None:
     shared_processors: list[structlog.typing.Processor] = [
         structlog.contextvars.merge_contextvars,  # pulls in request_id bound per request
@@ -22,7 +30,11 @@ def configure_logging(level: str, json_logs: bool) -> None:
         structlog.processors.TimeStamper(fmt="iso", utc=True),
     ]
     renderer: list[structlog.typing.Processor] = (
-        [structlog.processors.dict_tracebacks, structlog.processors.JSONRenderer()]
+        [
+            structlog.processors.dict_tracebacks,
+            add_severity,
+            structlog.processors.JSONRenderer(),
+        ]
         if json_logs
         else [structlog.dev.ConsoleRenderer()]
     )

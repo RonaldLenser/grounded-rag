@@ -20,6 +20,7 @@ from openai import AsyncOpenAI
 from grounded import __version__
 from grounded.api.errors import register_error_handlers
 from grounded.api.middleware import RequestContextMiddleware
+from grounded.api.rate_limit import SlidingWindowRateLimiter
 from grounded.api.routes import collections, health, query, search, web
 from grounded.config import Settings, get_settings
 from grounded.db.session import create_engine, create_session_factory
@@ -96,6 +97,10 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         lifespan=lifespan,
     )
     app.state.settings = settings
+    app.state.rate_limiters = {
+        "query": SlidingWindowRateLimiter(settings.rate_limit_query_per_minute),
+        "search": SlidingWindowRateLimiter(settings.rate_limit_search_per_minute),
+    }
     app.add_middleware(RequestContextMiddleware)
     register_error_handlers(app)
     app.include_router(health.router)
