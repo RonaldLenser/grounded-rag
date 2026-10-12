@@ -107,6 +107,7 @@ def summarize(results: list[ItemResult]) -> dict[str, Any]:
             "recommended_threshold": m.recommend_threshold(ok),
         },
         "models": sorted({str(r.response["usage"]["model"]) for r in llm_calls if r.response}),
+        "strategies": sorted({r.strategy for r in results if r.strategy}),
     }
 
 
@@ -144,6 +145,7 @@ def render_markdown(
         f"- **Date:** {meta['date']}",
         f"- **Target:** {meta['target']} "
         f"(collection `{meta['collection']}`, commit `{meta['commit']}`)",
+        f"- **Retrieval:** {', '.join(summary.get('strategies') or ['vector (pre-M8 server)'])}",
         f"- **Generation model:** {', '.join(summary['models']) or 'n/a'}",
         f"- **Judge model:** {meta['judge_model'] or 'not run (pass --judge)'}",
         f"- **Golden set:** {c['total']} questions ({n_ans} answerable incl. multi-source, "

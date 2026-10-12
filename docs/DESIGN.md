@@ -262,11 +262,14 @@ Each step is a pure-ish function or small class with its own unit tests. Provide
 - **MVP (M3):** pgvector cosine similarity, top_k = 6 (max 20), `hnsw.ef_search = 100`.
 - **Filtered HNSW:** the index finds neighbors across all collections, then the collection filter applies. `hnsw.iterative_scan = strict_order` (pgvector 0.8) keeps scanning so small collections still get `top_k` results. Both settings are transaction-local (`set_config(..., true)`).
 - Small collections: the planner may skip HNSW and do an exact scan + sort (cheaper for few rows). A test proves the query shape stays index-compatible for large collections.
-- **M8 upgrade:** hybrid. Vector top 20 + Postgres full-text top 20, merged with **Reciprocal Rank Fusion** (`score = Σ 1/(60 + rank)`), keep top 6.
-  - Why hybrid: embeddings miss exact terms (acronyms, IDs, section numbers like "GOVERN 1.2"). Keyword search catches them.
+- **M8: hybrid retrieval** (`RETRIEVAL_STRATEGY=hybrid`): vector top 20 + keyword top 20, merged with **Reciprocal Rank Fusion** (`score = sum of 1/(60 + rank)`), keep top 6.
+  - Why hybrid: the M7 eval showed both false refusals were retrieval misses on exact terms ("residual risk", "eliminate negative risk entirely") that embeddings ranked below 6.
+  - **Keyword search is IDF-weighted term matching, not Postgres's default ranking.** A chunk scores the sum of `ln(N / df)` over the question's words it contains, so rare words count and words on every page ("AI", "risk") count ~0. It is BM25's core idea without the term-frequency and length terms (chunks are uniform ~500 tokens). Measured on the golden set before building (top-6 hit rate, keyword search alone): all-terms `websearch_to_tsquery` 11/24, any-term `ts_rank_cd` 19/24, IDF-weighted 22/24, finding both vector misses at rank 1-2. Same `english` stemming as the stored `tsv` column; an OR-tsquery prefilter keeps the GIN index usable.
+  - Why RRF: cosine (0..1) and keyword weights (0..~20) are on different scales; RRF uses only ranks. k=60 rewards agreement between the two lists over a single strong hit.
+  - Keyword-only results still carry their cosine `score`, and **the gate uses the best cosine among the results**, not the first result, so the calibrated 0.20 threshold keeps its meaning.
+  - Shipped behind a flag; the default is set by the eval (before/after table in `docs/evals/`).
 - Collapse adjacent chunks from the same doc to save context tokens.
 - **Threshold gate** uses the vector similarity score. Value is calibrated from eval data, not guessed. (Cosine scores are model-specific.)
-- Ship M8 only with a before/after eval table. Without data it is just complexity.
 
 ## 16. Citation Strategy
 1. Context sources labeled `S1..Sn` (relevance order, capped by `MAX_CONTEXT_TOKENS`), each in `<source id="S1" file="..." pages="3-4">` tags. Source text, filenames and the question are HTML-escaped so document text can never close or forge tags.
