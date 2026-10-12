@@ -83,7 +83,9 @@ def _tag(name: str, text: str) -> str:
 
 
 class Judge:
-    def __init__(self, llm: LLMClient, max_tokens: int = 300) -> None:
+    # Verdict + one-sentence reason is usually under 150 tokens, but a 300 cap was
+    # hit in practice (a long reason got cut off). Billing is per token used.
+    def __init__(self, llm: LLMClient, max_tokens: int = 1024) -> None:
         self._llm = llm
         self._max_tokens = max_tokens
 

@@ -39,6 +39,7 @@ class ItemResult(BaseModel):
     error: str | None = None
     claim_judgments: list[ClaimJudgment] = Field(default_factory=list)
     answer_judgment: AnswerJudgment | None = None
+    judge_error: str | None = None  # judging failed for this question; others still count
 
     @property
     def status(self) -> str | None:
