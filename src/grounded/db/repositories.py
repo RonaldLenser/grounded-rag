@@ -67,6 +67,12 @@ async def count_chunks(session: AsyncSession, document_id: uuid.UUID) -> int:
     return count or 0
 
 
+async def delete_collection(session: AsyncSession, collection: Collection) -> None:
+    # Documents, chunks and query logs go with it (ON DELETE CASCADE in the database).
+    await session.delete(collection)
+    await session.flush()
+
+
 async def delete_document(session: AsyncSession, document: Document) -> None:
     # Chunks are removed by the database (ON DELETE CASCADE), not row by row in Python.
     await session.delete(document)

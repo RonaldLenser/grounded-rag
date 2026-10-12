@@ -134,6 +134,30 @@ def test_list_get_and_delete_document(api: TestClient) -> None:
     assert _db_counts() == (0, 0), "deleting a document must delete its chunks"
 
 
+def test_delete_collection_removes_everything_in_it(api: TestClient) -> None:
+    collection_id = _create_collection(api)
+    document_id = _upload(api, collection_id, "policy.md", MARKDOWN)["body"]["id"]
+
+    deleted = api.delete(f"/v1/collections/{collection_id}")
+
+    assert deleted.status_code == 204
+    assert api.get("/v1/collections").json() == []
+    assert api.get(f"/v1/collections/{collection_id}/documents").status_code == 404
+    assert api.get(f"/v1/documents/{document_id}").status_code == 404
+    assert _db_counts() == (0, 0), "deleting a collection must delete its documents and chunks"
+
+
+def test_delete_collection_requires_the_admin_key_and_an_existing_id(api: TestClient) -> None:
+    collection_id = _create_collection(api)
+
+    wrong_key = api.delete(f"/v1/collections/{collection_id}", headers={"X-API-Key": "wrong-key"})
+    missing = api.delete(f"/v1/collections/{uuid.uuid4()}")
+
+    assert wrong_key.status_code == 401
+    assert missing.status_code == 404
+    assert len(api.get("/v1/collections").json()) == 1
+
+
 # ----- Upload: rejections -----
 def test_same_file_twice_is_409_even_if_renamed(api: TestClient) -> None:
     collection_id = _create_collection(api)
