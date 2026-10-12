@@ -120,9 +120,10 @@ grounded-rag/
 ├── src/grounded/
 │   ├── main.py                 # app factory, middleware, router registration
 │   ├── config.py               # pydantic-settings, all env vars
-│   ├── logging.py              # structlog setup, request ID middleware
+│   ├── logging_config.py       # structlog setup (not logging.py: avoids shadowing stdlib)
 │   ├── api/
 │   │   ├── deps.py             # DI: db session, services, auth
+│   │   ├── middleware.py       # request ID + access log (pure ASGI)
 │   │   ├── errors.py           # exception → HTTP mapping
 │   │   └── routes/ health.py collections.py documents.py query.py
 │   ├── schemas/                # Pydantic request/response models
@@ -148,7 +149,7 @@ grounded-rag/
 ├── tests/
 │   ├── conftest.py  fakes.py   # FakeEmbedder, FakeLLM
 │   ├── unit/                   # chunker, citations, fusion, prompts
-│   └── integration/            # API + real Postgres
+│   └── integration/            # API + real Postgres (own conftest: DB check)
 ├── docs/
 │   ├── DESIGN.md (this file)  architecture.md  api.md
 │   ├── decisions/              # ADRs: 001-pgvector.md, 002-no-framework.md ...
@@ -319,7 +320,7 @@ CI: GitHub Actions with a `pgvector/pgvector:pg16` service container. Gates: ruf
 ```
 APP_ENV=local                     # local | test | prod
 LOG_LEVEL=INFO
-DATABASE_URL=postgresql+asyncpg://grounded:grounded@localhost:5432/grounded
+DATABASE_URL=postgresql+asyncpg://grounded:grounded@localhost:5433/grounded
 ANTHROPIC_API_KEY=
 OPENAI_API_KEY=
 LLM_MODEL=                        # Claude Sonnet model ID

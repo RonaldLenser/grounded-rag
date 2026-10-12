@@ -7,7 +7,13 @@ license = "MIT"
 authors = [{ name = "Ron Lenser" }]
 requires-python = ">=3.12"
 dependencies = [
+    "alembic>=1.20.0",
+    "asyncpg>=0.32.0",
     "fastapi>=0.143.0",
+    "pgvector>=0.5.1",
+    "pydantic-settings>=2.15.0",
+    "sqlalchemy[asyncio]>=2.1.4",
+    "structlog>=26.1.0",
     "uvicorn[standard]>=0.54.0",
 ]
 
@@ -46,13 +52,21 @@ select = [
 ]
 
 [tool.ruff.lint.per-file-ignores]
-"tests/**" = ["S101"]  # assert is how pytest works
+"tests/**" = ["S101", "S105"]  # assert is how pytest works; fake test credentials are fine
+"migrations/**" = ["N999"]     # Alembic revision filenames start with digits
 
 [tool.mypy]
 python_version = "3.12"
 strict = true
 mypy_path = "src"
 
+[[tool.mypy.overrides]]
+module = ["pgvector.*", "asyncpg.*"]
+ignore_missing_imports = true
+
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 addopts = "-ra --strict-markers"
+markers = [
+    "integration: needs a real PostgreSQL + pgvector database (DATABASE_URL)",
+]
