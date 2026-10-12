@@ -140,6 +140,15 @@ class SmokeTest:
         gone = self.client.get(f"/v1/documents/{document['id']}")
         self.check("delete document", deleted.status_code == 204 and gone.status_code == 404)
 
+        # Clean up so test collections never show up in the public demo.
+        removed = self.client.delete(f"/v1/collections/{collection_id}")
+        names = [c["name"] for c in self.client.get("/v1/collections").json()]
+        self.check(
+            "delete test collection",
+            removed.status_code == 204 and name not in names,
+            _fail(removed),
+        )
+
         print()
         if self.failures:
             print(f"{self.failures} CHECK(S) FAILED")

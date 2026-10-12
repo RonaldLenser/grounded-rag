@@ -45,6 +45,22 @@ async def list_collections(session: SessionDep) -> list[CollectionOut]:
     return [CollectionOut.model_validate(c) for c in await repositories.list_collections(session)]
 
 
+@router.delete(
+    "/collections/{collection_id}",
+    status_code=status.HTTP_204_NO_CONTENT,
+    dependencies=[AdminDep],
+    responses=ERRORS,
+)
+async def delete_collection(collection_id: uuid.UUID, session: SessionDep) -> Response:
+    """Delete a collection with all its documents, chunks and query logs."""
+    collection = await repositories.get_collection(session, collection_id)
+    if collection is None:
+        raise NotFoundError(f"Collection {collection_id} not found")
+    await repositories.delete_collection(session, collection)
+    await session.commit()
+    return Response(status_code=status.HTTP_204_NO_CONTENT)
+
+
 @router.post(
     "/collections/{collection_id}/documents",
     response_model=DocumentOut,
