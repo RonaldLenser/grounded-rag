@@ -7,9 +7,10 @@ retrieval evals (M7), which measure search quality separately from the LLM.
 import uuid
 from dataclasses import asdict
 
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends
 
 from grounded.api.deps import RetrieverDep
+from grounded.api.rate_limit import rate_limit
 from grounded.schemas.collections import ErrorResponse
 from grounded.schemas.search import SearchRequest, SearchResponse, SearchResult
 
@@ -19,7 +20,8 @@ router = APIRouter(prefix="/v1", tags=["search"])
 @router.post(
     "/collections/{collection_id}/search",
     response_model=SearchResponse,
-    responses={code: {"model": ErrorResponse} for code in (404, 422, 502, 503)},
+    responses={code: {"model": ErrorResponse} for code in (404, 422, 429, 502, 503)},
+    dependencies=[Depends(rate_limit("search"))],
 )
 async def search(
     collection_id: uuid.UUID, body: SearchRequest, retriever: RetrieverDep

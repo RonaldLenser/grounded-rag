@@ -99,6 +99,11 @@ uv run python scripts/smoke_test.py https://<url>    # a deployed instance
 ```
 
 
+### Deploy
+
+Google Cloud Run + Neon Postgres, with per-IP rate limits and a global daily LLM budget.
+Step-by-step guide: [docs/DEPLOY.md](docs/DEPLOY.md).
+
 ### Tests
 
 ```bash

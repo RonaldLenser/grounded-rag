@@ -8,6 +8,7 @@ from fastapi.testclient import TestClient
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 
+from grounded.api.rate_limit import SlidingWindowRateLimiter
 from grounded.db.models import QueryLog
 from grounded.generation.prompts import INSUFFICIENT_CONTEXT_MESSAGE
 from tests.fakes import FakeLLM
@@ -209,3 +210,33 @@ def test_question_validation(api: TestClient) -> None:
 
     assert api.post(url, json={"question": ""}).status_code == 422
     assert api.post(url, json={"question": "x" * 1001}).status_code == 422
+
+
+def test_query_rate_limit_returns_429_with_retry_after(api: TestClient) -> None:
+    collection_id = _seeded(api)
+    api.app.state.rate_limiters["query"] = SlidingWindowRateLimiter(limit=2)  # type: ignore[attr-defined]
+    url = f"/v1/collections/{collection_id}/query"
+
+    statuses = [api.post(url, json={"question": QUESTION}).status_code for _ in range(3)]
+
+    assert statuses == [200, 200, 429]
+    blocked = api.post(url, json={"question": QUESTION})
+    assert blocked.json()["error"]["code"] == "rate_limited"
+    assert int(blocked.headers["Retry-After"]) > 0
+
+
+def test_daily_llm_budget_blocks_llm_calls_but_not_free_refusals(
+    api: TestClient, fake_llm: FakeLLM
+) -> None:
+    collection_id = _seeded(api)
+    api.app.state.settings.daily_llm_query_limit = 1  # type: ignore[attr-defined]
+
+    first = api.post(f"/v1/collections/{collection_id}/query", json={"question": QUESTION})
+    second = api.post(f"/v1/collections/{collection_id}/query", json={"question": QUESTION})
+    off_topic = _ask(api, collection_id, "best chocolate chip cookie recipe")
+
+    assert first.status_code == 200
+    assert second.status_code == 429
+    assert second.json()["error"]["code"] == "daily_limit_reached"
+    assert len(fake_llm.calls) == 1, "the blocked request must not reach the LLM"
+    assert off_topic["status"] == "insufficient_context", "gate refusals cost nothing"
