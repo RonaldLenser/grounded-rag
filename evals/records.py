@@ -35,6 +35,7 @@ class AnswerJudgment(BaseModel):
 class ItemResult(BaseModel):
     item: GoldenItem
     search_hits: list[SearchHit] = Field(default_factory=list)
+    strategy: str | None = None  # retrieval strategy the server reported (M8+)
     response: dict[str, Any] | None = None  # the /query response body, as returned
     error: str | None = None
     claim_judgments: list[ClaimJudgment] = Field(default_factory=list)

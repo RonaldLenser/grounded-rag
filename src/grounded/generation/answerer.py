@@ -31,7 +31,7 @@ from grounded.generation.prompts import (
     select_sources,
 )
 from grounded.providers.base import LLMClient
-from grounded.retrieval.retriever import RetrievedChunk, Retriever
+from grounded.retrieval.retriever import RetrievedChunk, Retriever, Strategy, best_similarity
 
 logger = structlog.get_logger(__name__)
 
@@ -39,6 +39,7 @@ logger = structlog.get_logger(__name__)
 @dataclass(frozen=True)
 class AnswerResult:
     query_id: uuid.UUID
+    strategy: Strategy
     verification: VerificationResult
     retrieved: list[RetrievedChunk]
     llm_called: bool
@@ -71,7 +72,10 @@ class Answerer:
         input_tokens: int | None = None
         output_tokens: int | None = None
 
-        if not chunks or chunks[0].score < self._settings.min_relevance_score:
+        # Gate on the BEST cosine score, not the first result: in hybrid mode results
+        # are ordered by fused rank, and the threshold was calibrated on cosine.
+        top_score = best_similarity(chunks)
+        if top_score is None or top_score < self._settings.min_relevance_score:
             # Gate: nothing relevant enough. Refusing here costs $0 and can't hallucinate.
             verification = VerificationResult(
                 status="insufficient_context", answer=INSUFFICIENT_CONTEXT_MESSAGE
@@ -118,7 +122,7 @@ class Answerer:
             query_id=str(query_log.id),
             status=verification.status,
             llm_called=llm_called,
-            top_score=round(chunks[0].score, 4) if chunks else None,
+            top_score=round(top_score, 4) if top_score is not None else None,
             claims_supported=len(verification.claims),
             claims_rejected=[c.reason for c in verification.rejected_claims],
             evidence_rejected=[e.reason for e in verification.rejected_evidence],
@@ -129,6 +133,7 @@ class Answerer:
         )
         return AnswerResult(
             query_id=query_log.id,
+            strategy=self._retriever.strategy,
             verification=verification,
             retrieved=chunks,
             llm_called=llm_called,

@@ -78,6 +78,7 @@ def collect(
                 client, f"{base}/search", {"query": item.question, "top_k": SEARCH_TOP_K}, sleep
             )
             result.search_hits = [SearchHit.model_validate(hit) for hit in search["results"]]
+            result.strategy = search.get("strategy")
             result.response = _post(client, f"{base}/query", {"question": item.question}, sleep)
         except EvalAbortedError:
             raise

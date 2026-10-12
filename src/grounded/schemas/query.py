@@ -32,8 +32,9 @@ class Citation(BaseModel):
 
 
 class RetrievalInfo(BaseModel):
+    strategy: Literal["vector", "hybrid"]
     chunks_retrieved: int
-    top_score: float | None
+    top_score: float | None = Field(description="Best cosine similarity (the gate's input)")
 
 
 class VerificationInfo(BaseModel):
