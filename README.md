@@ -8,9 +8,11 @@
 
 **Live demo: https://grounded-1004795551444.us-east4.run.app**
 
+![Asking a question: a cited answer with verified quotes, then a refusal for an off-topic question](docs/media/demo.gif)
+
 Preloaded with two public NIST documents (AI Risk Management Framework 1.0 and the Generative AI
-Profile, 112 pages). Try "What are the four functions of the AI RMF Core?" and then "What is the
-capital of France?" to see a cited answer and a refusal. First load after idle takes a few
+Profile, 112 pages). Try "What are the four functions of the AI RMF Core?" and then "Who won the
+2022 FIFA World Cup?" to see a cited answer and a refusal. First load after idle takes a few
 seconds (scales to zero).
 
 ## Highlights
@@ -27,23 +29,22 @@ seconds (scales to zero).
   refusals, citations, and (with an LLM judge that states its reasons) claim support and answer
   correctness. Reports are committed in [docs/evals/](docs/evals/).
 - **Deployed like a real service.** Cloud Run + Neon Postgres, secrets in Secret Manager, per-IP
-  rate limits, and an atomic daily LLM budget enforced in the database. 240+ tests, strict mypy,
+  rate limits, and an atomic daily LLM budget enforced in the database. 250+ tests, strict mypy,
   CI on every push.
 
 ## Results
 
-Live demo, Claude Sonnet 5.5, judged by Claude Haiku 5.5. Same 33 questions before and after
-hybrid retrieval:
+Live demo, Claude Sonnet 5.5, judged by Claude Haiku 5.5. Same 33 questions on every run:
 
-| What | Vector only ([v1](docs/evals/2026-10-12-v1.md)) | Hybrid ([v2](docs/evals/2026-10-12-v2-hybrid.md)) |
-|---|---|---|
-| Answerable questions answered (not refused) | 22 / 24 | **24 / 24** |
-| Answers correct vs hand-written reference (LLM judge) | 22 / 22 | **24 / 24** |
-| Right page retrieved: top 3 / top 6 | 88% / 92% | **100% / 100%** |
-| Retrieval MRR | 0.81 | **0.88** |
-| Unanswerable and off-topic questions: no unsupported answer | 9 / 9 | 9 / 9 |
-| Shown claims NOT supported by their quotes (LLM judge) | 0 / 78 | 0 / 86 |
-| Latency p50 / p95 (LLM answers) | 2.9s / 6.5s | 3.4s / 7.1s |
+| What | Vector only ([v1](docs/evals/2026-10-12-v1.md)) | Hybrid ([v2](docs/evals/2026-10-12-v2-hybrid.md)) | Hybrid + PDF text repair ([v3](docs/evals/2026-10-12-v3.md)) |
+|---|---|---|---|
+| Answerable questions answered (not refused) | 22 / 24 | **24 / 24** | **24 / 24** |
+| Answers correct vs hand-written reference (LLM judge) | 22 / 22 | **24 / 24** | 23 / 24 |
+| Right page retrieved: top 3 / top 6 | 88% / 92% | **100% / 100%** | **100% / 100%** |
+| Retrieval MRR | 0.81 | **0.88** | 0.87 |
+| Unanswerable and off-topic questions: no unsupported answer | 9 / 9 | 9 / 9 | 9 / 9 |
+| Shown claims NOT supported by their quotes (LLM judge) | 0 / 78 | 0 / 86 | 0 / 83 |
+| Latency p50 / p95 (LLM answers) | 2.9s / 6.5s | 3.4s / 7.1s | 3.2s / 6.6s |
 
 Small sample, and the keyword method was chosen after seeing these questions' failures: treat this
 as a regression check, not a benchmark. Full analysis in [Evaluation](#evaluation).
@@ -229,6 +230,12 @@ What the runs showed:
 - **One unanswerable question got a `partial` answer** with hybrid ("What penalties does NIST
   impose?"): the supported fact that the framework is voluntary, plus a notice that the documents
   only partly answer. No penalty was invented.
+- **PDF text repair (v3) caused no regression.** Retrieval stayed at 100% top 3, every claim the
+  verifier showed was again judged supported or partially supported, and quotes now read
+  cleanly: words split across lines ("illus- trated") appeared in 19 of 100 cited quotes in v2
+  and 0 of 96 in v3. The one answer judged "partially correct" left
+  out an example the reference included; it stated nothing wrong. Run-to-run differences of one
+  question are within model variance.
 
 ## Limitations
 
@@ -256,7 +263,7 @@ personal. Details: "Data retention" in [docs/DESIGN.md](docs/DESIGN.md).
 - [x] M6.1: Claim-level verification, atomic budget
 - [x] M7: Evaluation harness and golden set
 - [x] M8: Hybrid retrieval (won the eval, now the default)
-- [x] M10: Docs, PDF text repair, demo
+- [x] M10: Docs, PDF text repair, demo media, no-regression eval (v3)
 - [ ] Held-out question set for an unbiased estimate
 - [ ] Streaming (deferred: polish, not core value)
 
