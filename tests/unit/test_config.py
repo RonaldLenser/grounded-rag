@@ -115,3 +115,11 @@ def test_empty_keys_are_treated_as_unset() -> None:
 
     assert settings.openai_api_key is None
     assert settings.admin_api_key is None
+
+
+def test_validation_errors_never_echo_credentials() -> None:
+    """A rejected DATABASE_URL must not leak its password into the error message."""
+    with pytest.raises(ValidationError) as excinfo:
+        Settings(database_url='"postgresql://user:hunter2-secret@host/db"')
+
+    assert "hunter2-secret" not in str(excinfo.value)
