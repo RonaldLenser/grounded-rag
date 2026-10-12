@@ -189,3 +189,8 @@ button.link {
   position: absolute; width: 1px; height: 1px; overflow: hidden;
   clip: rect(0 0 0 0); white-space: nowrap;
 }
+
+/* Admin-only controls appear once an admin key is entered (see syncAdminControls). */
+body:not(.has-admin-key) .admin-only {
+  display: none;
+}

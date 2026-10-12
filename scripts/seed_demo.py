@@ -7,14 +7,21 @@ evals/corpus/ (gitignored), so the M7 evals can reuse the same files.
 Safe to re-run: an existing collection is reused and duplicate uploads
 (same content hash) are skipped.
 
+--replace deletes the demo documents first and uploads them again. Use it
+after changing parsing or chunking: identical files would otherwise be skipped
+as duplicates and keep their old chunks. The demo has no documents for the
+minute or so this takes.
+
 Usage:
     uv run python scripts/seed_demo.py                         # http://localhost:8000
     uv run python scripts/seed_demo.py https://your-app.run.app
+    uv run python scripts/seed_demo.py https://your-app.run.app --replace
 
 Reads ADMIN_API_KEY from the environment or .env.
 Cost: embedding ~100 pages, well under one cent.
 """
 
+import argparse
 import sys
 from pathlib import Path
 
@@ -55,10 +62,20 @@ def find_or_create_collection(client: httpx2.Client) -> str:
     return str(created.json()["id"])
 
 
-def main(base_url: str) -> int:
+def delete_demo_documents(client: httpx2.Client, collection_id: str) -> None:
+    documents = client.get(f"/v1/collections/{collection_id}/documents").raise_for_status().json()
+    for doc in documents:
+        if doc["filename"] in DOCUMENTS:
+            client.delete(f"/v1/documents/{doc['id']}").raise_for_status()
+            print(f"  deleted {doc['filename']} (will re-upload)")
+
+
+def main(base_url: str, *, replace: bool = False) -> int:
     client = httpx2.Client(base_url=base_url, headers={"X-API-Key": load_admin_key()}, timeout=300)
     print(f"Seeding {base_url}\n")
     collection_id = find_or_create_collection(client)
+    if replace:
+        delete_demo_documents(client, collection_id)
 
     for filename, url in DOCUMENTS.items():
         data = download(filename, url)
@@ -80,5 +97,10 @@ def main(base_url: str) -> int:
 
 
 if __name__ == "__main__":
-    url = sys.argv[1] if len(sys.argv) > 1 else "http://localhost:8000"
-    sys.exit(main(url.rstrip("/")))
+    parser = argparse.ArgumentParser(description="Load the NIST demo corpus.")
+    parser.add_argument("base_url", nargs="?", default="http://localhost:8000")
+    parser.add_argument(
+        "--replace", action="store_true", help="delete and re-upload the demo documents"
+    )
+    args = parser.parse_args()
+    sys.exit(main(args.base_url.rstrip("/"), replace=args.replace))
