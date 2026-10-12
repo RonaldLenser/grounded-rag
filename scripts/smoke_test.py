@@ -14,6 +14,7 @@ Cost: a few embedding requests and one Claude call (well under one cent).
 """
 
 import os
+import re
 import sys
 import time
 from pathlib import Path
@@ -202,10 +203,18 @@ class SmokeTest:
         )
         body = grounded.json() if grounded.status_code == 200 else {}
         self.check(
-            "answer a covered question with a verified citation (REAL Claude)",
-            body.get("status") in ("answered", "partial") and len(body.get("citations", [])) > 0,
+            "answer a covered question with verified claims (REAL Claude)",
+            body.get("status") in ("answered", "partial") and len(body.get("claims", [])) > 0,
             _fail(grounded) or f"status={body.get('status')}",
         )
+        if body:
+            cited = {c["source_id"] for c in body["citations"]}
+            markers = set(re.findall(r"\[(S\d+)\]", body["answer"]))
+            self.check(
+                "every [S#] in the answer has a verified quote",
+                bool(markers) and markers <= cited,
+                f"markers={sorted(markers)}, verified={sorted(cited)}",
+            )
         if body:
             print(f"      answer: {body['answer']}")
             for c in body["citations"]:

@@ -1,6 +1,7 @@
 """End-to-end question answering: real Postgres, fake embeddings, fake LLM."""
 
 import asyncio
+import json
 import os
 import uuid
 
@@ -58,13 +59,25 @@ def test_grounded_answer_with_verified_citation(api: TestClient) -> None:
     body = _ask(api, collection_id)
 
     assert body["status"] == "answered"
-    assert "[S1]" in body["answer"]
+    assert (
+        body["answer"]
+        == "The governance function assigns accountability and oversight for AI risk [S1]."
+    )
+    assert body["notice"] is None
+    assert body["claims"] == [
+        {
+            "text": "The governance function assigns accountability and oversight for AI risk.",
+            "source_ids": ["S1"],
+        }
+    ]
     [citation] = body["citations"]
     assert citation["source_id"] == "S1"
     assert citation["filename"] == "governance.md"
     assert citation["heading"] == "Governance"
     assert citation["quote"] in GOVERNANCE.decode()
     assert body["verification"] == {
+        "claims_supported": 1,
+        "claims_rejected": 0,
         "citations_verified": 1,
         "citations_rejected": 0,
         "downgraded_from": None,
@@ -110,57 +123,77 @@ def test_empty_collection_is_refused_without_calling_the_llm(
     assert fake_llm.calls == []
 
 
-def test_hallucinated_citation_downgrades_to_insufficient(
-    api: TestClient, fake_llm: FakeLLM
-) -> None:
+def test_hallucinated_claim_downgrades_to_insufficient(api: TestClient, fake_llm: FakeLLM) -> None:
     collection_id = _seeded(api)
     fake_llm.respond_with = {
         "status": "answered",
-        "answer": "The CEO personally signs off on every model [S1].",
-        "citations": [{"source_id": "S1", "quote": "The CEO personally signs off on every model"}],
+        "claims": [
+            {
+                "text": "The CEO personally signs off on every model.",
+                "evidence": [
+                    {"source_id": "S1", "quote": "The CEO personally signs off on every model"}
+                ],
+            }
+        ],
     }
 
     body = _ask(api, collection_id)
 
     assert body["status"] == "insufficient_context"
     assert body["answer"] == INSUFFICIENT_CONTEXT_MESSAGE, "unverifiable answers are never shown"
+    assert body["claims"] == []
     assert body["citations"] == []
+    assert "CEO" not in json.dumps(body)
     assert body["verification"]["downgraded_from"] == "answered"
+    assert body["verification"]["claims_rejected"] == 1
     assert body["verification"]["citations_rejected"] == 1
 
 
-def test_partially_invented_citations_downgrade_to_partial(
-    api: TestClient, fake_llm: FakeLLM
-) -> None:
+def test_unsupported_claim_is_dropped_not_just_uncited(api: TestClient, fake_llm: FakeLLM) -> None:
+    """Regression for the M6 bug: 'Budgets are unlimited [S9].' lost its marker but stayed
+    visible as 'Budgets are unlimited.' The claim must be gone from the entire response."""
     collection_id = _seeded(api)
     fake_llm.respond_with = {
         "status": "answered",
-        "answer": "Accountability is assigned [S1]. Budgets are unlimited [S9].",
-        "citations": [
-            {"source_id": "S1", "quote": "assigns accountability and oversight for AI risk"},
-            {"source_id": "S9", "quote": "budgets are unlimited for all teams"},
+        "claims": [
+            {
+                "text": "Accountability is assigned.",
+                "evidence": [
+                    {
+                        "source_id": "S1",
+                        "quote": "assigns accountability and oversight for AI risk",
+                    }
+                ],
+            },
+            {
+                "text": "Budgets are unlimited.",
+                "evidence": [{"source_id": "S9", "quote": "budgets are unlimited for all teams"}],
+            },
         ],
     }
 
     body = _ask(api, collection_id)
 
     assert body["status"] == "partial"
-    assert body["answer"] == "Accountability is assigned [S1]. Budgets are unlimited."
+    assert body["answer"] == "Accountability is assigned [S1]."
+    assert "unlimited" not in json.dumps(body).lower()
+    assert body["notice"] == (
+        "Some statements were left out because they could not be verified against the documents."
+    )
     assert [c["source_id"] for c in body["citations"]] == ["S1"]
+    assert body["verification"]["claims_supported"] == 1
+    assert body["verification"]["claims_rejected"] == 1
+    assert body["verification"]["downgraded_from"] == "answered"
 
 
-def test_model_refusal_passes_through(api: TestClient, fake_llm: FakeLLM) -> None:
+def test_model_refusal_returns_the_fixed_message(api: TestClient, fake_llm: FakeLLM) -> None:
     collection_id = _seeded(api)
-    fake_llm.respond_with = {
-        "status": "insufficient_context",
-        "answer": "The documents don't say who audits the models.",
-        "citations": [],
-    }
+    fake_llm.respond_with = {"status": "insufficient_context", "claims": []}
 
     body = _ask(api, collection_id)
 
     assert body["status"] == "insufficient_context"
-    assert body["answer"] == "The documents don't say who audits the models."
+    assert body["answer"] == INSUFFICIENT_CONTEXT_MESSAGE
     assert body["usage"]["llm_called"] is True
 
 
@@ -240,3 +273,19 @@ def test_daily_llm_budget_blocks_llm_calls_but_not_free_refusals(
     assert second.json()["error"]["code"] == "daily_limit_reached"
     assert len(fake_llm.calls) == 1, "the blocked request must not reach the LLM"
     assert off_topic["status"] == "insufficient_context", "gate refusals cost nothing"
+
+
+def test_failed_llm_calls_still_use_the_daily_budget(api: TestClient, fake_llm: FakeLLM) -> None:
+    """The slot is reserved before the call, so outages and timeouts are counted too."""
+    collection_id = _seeded(api)
+    api.app.state.settings.daily_llm_query_limit = 1  # type: ignore[attr-defined]
+    url = f"/v1/collections/{collection_id}/query"
+
+    fake_llm.fail = True
+    failed = api.post(url, json={"question": QUESTION})
+    fake_llm.fail = False
+    blocked = api.post(url, json={"question": QUESTION})
+
+    assert failed.status_code == 502
+    assert blocked.status_code == 429
+    assert len(fake_llm.calls) == 1

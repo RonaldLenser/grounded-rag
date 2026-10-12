@@ -61,13 +61,14 @@
           <textarea id="question" rows="2" maxlength="1000" placeholder="Ask a question about your documents..." required></textarea>
           <button type="submit" id="ask-button">Ask</button>
         </form>
+        <p class="hint">Questions are stored to evaluate answer quality. Don't include personal information.</p>
 
         <div id="result" hidden>
           <div class="result-head">
             <span id="status-badge" class="badge"></span>
-            <span id="downgrade-note" class="hint" hidden></span>
           </div>
           <p id="answer" class="answer"></p>
+          <p id="answer-notice" class="notice" role="note" hidden></p>
           <ol id="citations" class="citations"></ol>
           <p id="meta" class="meta"></p>
         </div>
@@ -79,8 +80,8 @@
           <ol>
             <li>Your question is matched against document chunks (vector search).</li>
             <li>If nothing is relevant enough, it says so, without calling the AI.</li>
-            <li>Otherwise Claude answers from those chunks only, citing exact quotes.</li>
-            <li>Every quote is checked against the source in code. Fake citations are dropped.</li>
+            <li>Otherwise Claude answers from those chunks only, as claims with exact quotes.</li>
+            <li>Every quote is checked against the source in code. Claims that fail are dropped.</li>
           </ol>
         </div>
       </section>

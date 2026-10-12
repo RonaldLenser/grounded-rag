@@ -1,17 +1,18 @@
-"""Question answering: retrieve → gate → prompt → LLM → verify → log.
+"""Question answering: retrieve → gate → reserve budget → LLM → verify → log.
 
 The hallucination defenses, in order:
   1. Relevance gate: weak retrieval = refuse WITHOUT calling the LLM.
-  2. Prompt contract: sources only, cite everything, sources are data.
-  3. Structured output: an API-enforced JSON schema with status and citations.
-  4. Citation verification in code (citations.py), with status downgrades.
+  2. Prompt contract: sources only, one claim per statement, sources are data.
+  3. Structured output: an API-enforced JSON schema of claims with evidence.
+  4. Claim verification in code (citations.py): the answer is built only from
+     claims whose evidence verified. Unsupported claims are dropped, not edited.
   5. Every query logged (status, scores, tokens, latency) for evals and debugging.
 """
 
 import time
 import uuid
 from dataclasses import dataclass
-from datetime import UTC, datetime, timedelta
+from datetime import UTC, datetime
 
 import structlog
 from pydantic import ValidationError
@@ -73,11 +74,11 @@ class Answerer:
         if not chunks or chunks[0].score < self._settings.min_relevance_score:
             # Gate: nothing relevant enough. Refusing here costs $0 and can't hallucinate.
             verification = VerificationResult(
-                status="insufficient_context", answer=INSUFFICIENT_CONTEXT_MESSAGE, verified=[]
+                status="insufficient_context", answer=INSUFFICIENT_CONTEXT_MESSAGE
             )
             llm_called = False
         else:
-            await self._enforce_daily_budget()
+            await self._reserve_llm_call()
             sources = select_sources(chunks, self._settings.max_context_tokens)
             completion = await self._llm.complete_structured(
                 system=SYSTEM_PROMPT,
@@ -111,15 +112,16 @@ class Answerer:
         )
         await self._session.commit()
 
-        # Counts and reasons only: never log the question or answer text.
+        # Counts and reasons only: never log the question, answer, or claim text.
         logger.info(
             "answer_completed",
             query_id=str(query_log.id),
             status=verification.status,
             llm_called=llm_called,
             top_score=round(chunks[0].score, 4) if chunks else None,
-            citations_verified=len(verification.verified),
-            citations_rejected=[r.reason for r in verification.rejected],
+            claims_supported=len(verification.claims),
+            claims_rejected=[c.reason for c in verification.rejected_claims],
+            evidence_rejected=[e.reason for e in verification.rejected_evidence],
             downgraded_from=verification.downgraded_from,
             input_tokens=input_tokens,
             output_tokens=output_tokens,
@@ -136,16 +138,22 @@ class Answerer:
             latency_ms=latency_ms,
         )
 
-    async def _enforce_daily_budget(self) -> None:
-        """Global cost ceiling: at most N LLM calls per rolling 24 hours.
+    async def _reserve_llm_call(self) -> None:
+        """Global cost ceiling: at most N LLM calls per UTC day, across all instances.
 
-        Counted in the database (query_logs), so it is exact across every app
-        instance. Refusals at the relevance gate don't count: they cost nothing.
+        The slot is reserved atomically in Postgres BEFORE the provider call and
+        committed immediately, so:
+          - concurrent requests can never overshoot the limit (no count-then-call race)
+          - a call that fails or times out still counts (it may still be billed)
+          - the counter's row lock is held for milliseconds, not for the LLM call
+        Refusals at the relevance gate never get here: they cost nothing.
         """
-        since = datetime.now(UTC) - timedelta(days=1)
-        used = await repositories.count_llm_queries_since(self._session, since)
-        if used >= self._settings.daily_llm_query_limit:
-            logger.warning("daily_llm_limit_reached", used=used)
+        today = datetime.now(UTC).date()
+        limit = self._settings.daily_llm_query_limit
+        allowed = await repositories.reserve_llm_call(self._session, today, limit)
+        await self._session.commit()
+        if not allowed:
+            logger.warning("daily_llm_limit_reached", limit=limit)
             raise DailyLimitError(
                 "This demo has reached its daily question limit. Please try again tomorrow."
             )
