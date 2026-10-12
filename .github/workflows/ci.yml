@@ -52,7 +52,7 @@ jobs:
         run: uv run ruff format --check .
 
       - name: Type check
-        run: uv run mypy src tests migrations scripts
+        run: uv run mypy src tests migrations scripts evals
 
       - name: Apply migrations
         run: uv run alembic upgrade head

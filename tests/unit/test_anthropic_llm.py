@@ -8,6 +8,7 @@ import httpx2
 import pytest
 from anthropic import AsyncAnthropic
 
+from evals import judge
 from grounded.errors import LLMProviderError
 from grounded.generation.prompts import ANSWER_SCHEMA
 from grounded.providers.anthropic_llm import AnthropicLLM
@@ -124,6 +125,11 @@ def _walk(node: Any, path: str = "$") -> list[str]:
     return problems
 
 
-def test_answer_schema_follows_structured_output_rules() -> None:
+@pytest.mark.parametrize(
+    "schema",
+    [ANSWER_SCHEMA, judge.CLAIM_SCHEMA, judge.ANSWER_SCHEMA],
+    ids=lambda schema: schema.name,
+)
+def test_schemas_follow_structured_output_rules(schema: OutputSchema) -> None:
     """Regression test: a schema the API rejects fails here, not as a 400 in production."""
-    assert _walk(ANSWER_SCHEMA.schema) == []
+    assert _walk(schema.schema) == []
