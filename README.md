@@ -25,7 +25,7 @@ FastAPI · PostgreSQL + pgvector · SQLAlchemy 2.0 (async) + Alembic · Claude (
 - [x] M1: Config, structured logging, database schema, migrations, Docker Compose
 - [x] M2: Document ingestion (parse, chunk, embed, store)
 - [x] M3: Vector search
-- [ ] M4: Cited answers with citation verification and refusals
+- [x] M4: Cited answers with citation verification and refusals
 - [ ] M5: Web UI
 - [ ] M6: Deploy
 - [ ] M7: Evaluation harness
@@ -62,7 +62,7 @@ uv run uvicorn grounded.main:create_app --factory --reload
 
 ### Try the API
 
-Set `OPENAI_API_KEY` and `ADMIN_API_KEY` in `.env`, start the app, then:
+Set `OPENAI_API_KEY`, `ANTHROPIC_API_KEY` and `ADMIN_API_KEY` in `.env`, start the app, then:
 
 ```bash
 # create a collection
@@ -78,6 +78,11 @@ curl -X POST localhost:8000/v1/collections/<collection-id>/documents \
 curl -X POST localhost:8000/v1/collections/<collection-id>/search \
   -H "Content-Type: application/json" \
   -d '{"query": "What does the policy say about accountability?", "top_k": 3}'
+
+# ask: a cited answer, or an explicit "not in your documents"
+curl -X POST localhost:8000/v1/collections/<collection-id>/query \
+  -H "Content-Type: application/json" \
+  -d '{"question": "Who is accountable for AI risk?"}'
 ```
 
 Or use the interactive docs at http://localhost:8000/docs (click **Authorize** and paste the admin key).
@@ -85,7 +90,7 @@ Or use the interactive docs at http://localhost:8000/docs (click **Authorize** a
 ### Smoke test
 
 With the app running (`docker compose up --build -d`), run the end-to-end check against
-real OpenAI embeddings:
+real OpenAI embeddings and Claude:
 
 ```bash
 uv run python scripts/smoke_test.py                  # local

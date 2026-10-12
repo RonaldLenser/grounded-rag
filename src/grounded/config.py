@@ -45,6 +45,18 @@ class Settings(BaseSettings):
     embedding_timeout_seconds: float = Field(default=30.0, gt=0)
     embedding_max_retries: int = Field(default=3, ge=0, le=10)
 
+    # ----- Generation (answers) -----
+    anthropic_api_key: SecretStr | None = None
+    llm_model: str = "claude-sonnet-5-5"
+    llm_max_tokens: int = Field(default=1024, ge=64, le=8192)
+    llm_timeout_seconds: float = Field(default=60.0, gt=0)
+    llm_max_retries: int = Field(default=2, ge=0, le=10)
+    # Below this best-match similarity we refuse WITHOUT calling the LLM.
+    # Provisional value; calibrated against the eval set in M7.
+    min_relevance_score: float = Field(default=0.20, ge=-1.0, le=1.0)
+    # Cap on source text sent to the LLM per question (cost + focus).
+    max_context_tokens: int = Field(default=6000, ge=500, le=100_000)
+
     # ----- Ingestion -----
     chunk_size_tokens: int = Field(default=500, ge=50, le=8000)
     chunk_overlap_tokens: int = Field(default=75, ge=0)
@@ -65,7 +77,7 @@ class Settings(BaseSettings):
             )
         return value
 
-    @field_validator("admin_api_key", "openai_api_key", mode="before")
+    @field_validator("admin_api_key", "openai_api_key", "anthropic_api_key", mode="before")
     @classmethod
     def empty_means_unset(cls, value: object) -> object:
         # Docker Compose passes unset variables through as "" rather than omitting them.
@@ -93,6 +105,7 @@ class Settings(BaseSettings):
                 name
                 for name, value in (
                     ("OPENAI_API_KEY", self.openai_api_key),
+                    ("ANTHROPIC_API_KEY", self.anthropic_api_key),
                     ("ADMIN_API_KEY", self.admin_api_key),
                 )
                 if value is None
