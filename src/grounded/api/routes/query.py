@@ -6,6 +6,7 @@ from fastapi import APIRouter, Depends
 
 from grounded.api.deps import AnswererDep
 from grounded.api.rate_limit import rate_limit
+from grounded.retrieval.retriever import best_similarity
 from grounded.schemas.collections import ErrorResponse
 from grounded.schemas.query import (
     Citation,
@@ -51,8 +52,9 @@ async def query(
             for c in verification.verified
         ],
         retrieval=RetrievalInfo(
+            strategy=result.strategy,
             chunks_retrieved=len(result.retrieved),
-            top_score=result.retrieved[0].score if result.retrieved else None,
+            top_score=best_similarity(result.retrieved),
         ),
         verification=VerificationInfo(
             claims_supported=len(verification.claims),

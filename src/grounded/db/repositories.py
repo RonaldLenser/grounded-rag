@@ -121,6 +121,80 @@ async def search_chunks_by_vector(
     return [(chunk, filename, float(similarity)) for chunk, filename, similarity in rows]
 
 
+# ----- Keyword search -----
+# IDF-weighted term matching: a chunk's score is the sum, over the question's
+# words it contains, of ln(N / df) (N = chunks in the collection, df = chunks
+# containing the word). Rare words ("residual", "Dioptra") count a lot; words on
+# every page ("AI", "risk") count ~0. This is BM25's core idea without its
+# term-frequency and length terms (chunks are all ~500 tokens, so length
+# normalization buys little here).
+#
+# Why not Postgres's built-in ranking: websearch/plainto_tsquery require EVERY
+# word to match (natural-language questions rarely do), and ts_rank ignores word
+# rarity. On the golden set those found the right page in the top 6 for 11/24
+# and 19/24 questions; this query finds 22/24 (docs/DESIGN.md, M8).
+#
+# Words are stemmed with the same 'english' config as the stored tsv column.
+# The OR-tsquery prefilter lets Postgres use the GIN index on chunks.tsv.
+_KEYWORD_SEARCH_SQL = text(
+    """
+    WITH scope AS (
+        SELECT c.id, c.tsv
+        FROM chunks c JOIN documents d ON d.id = c.document_id
+        WHERE d.collection_id = :collection_id AND d.status = 'ready'
+    ),
+    terms AS (
+        SELECT DISTINCT unnest(tsvector_to_array(to_tsvector('english', :query))) AS lexeme
+    ),
+    hits AS (
+        SELECT s.id AS chunk_id, t.lexeme
+        FROM scope s
+        CROSS JOIN LATERAL unnest(tsvector_to_array(s.tsv)) AS t(lexeme)
+        WHERE s.tsv @@ replace(plainto_tsquery('english', :query)::text, ' & ', ' | ')::tsquery
+          AND t.lexeme IN (SELECT lexeme FROM terms)
+    ),
+    weights AS (
+        SELECT lexeme, ln((SELECT count(*) FROM scope)::float8 / count(*)) AS idf
+        FROM hits
+        GROUP BY lexeme
+    )
+    SELECT h.chunk_id, sum(w.idf) AS score
+    FROM hits h JOIN weights w USING (lexeme)
+    GROUP BY h.chunk_id
+    HAVING sum(w.idf) > 0
+    ORDER BY score DESC, h.chunk_id
+    LIMIT :limit
+    """
+)
+
+
+async def search_chunk_ids_by_keywords(
+    session: AsyncSession, collection_id: uuid.UUID, query: str, limit: int
+) -> list[tuple[uuid.UUID, float]]:
+    """(chunk_id, keyword score), best first. Empty if no informative word matches."""
+    rows = await session.execute(
+        _KEYWORD_SEARCH_SQL,
+        {"collection_id": collection_id, "query": query, "limit": limit},
+    )
+    return [(chunk_id, float(score)) for chunk_id, score in rows]
+
+
+async def get_chunks_with_similarity(
+    session: AsyncSession, chunk_ids: list[uuid.UUID], query_vector: list[float]
+) -> list[tuple[Chunk, str, float]]:
+    """Load chunks by id with their cosine similarity to the query (order not guaranteed)."""
+    if not chunk_ids:
+        return []
+    distance = Chunk.embedding.cosine_distance(query_vector)
+    statement = (
+        select(Chunk, Document.filename, (1 - distance).label("similarity"))
+        .join(Document, Document.id == Chunk.document_id)
+        .where(Chunk.id.in_(chunk_ids))
+    )
+    rows = await session.execute(statement)
+    return [(chunk, filename, float(similarity)) for chunk, filename, similarity in rows]
+
+
 # ----- Query logs and LLM budget -----
 async def add_query_log(
     session: AsyncSession,

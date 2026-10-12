@@ -1,6 +1,7 @@
 """API contracts for retrieval (search)."""
 
 import uuid
+from typing import Literal
 
 from pydantic import BaseModel, Field
 
@@ -26,8 +27,18 @@ class SearchResult(BaseModel):
     heading: str | None
     content: str
     score: float = Field(description="Cosine similarity, higher is more relevant")
+    vector_rank: int | None = Field(
+        default=None, description="Hybrid only: rank in the vector results"
+    )
+    keyword_rank: int | None = Field(
+        default=None, description="Hybrid only: rank in the keyword results"
+    )
+    fused_score: float | None = Field(
+        default=None, description="Hybrid only: Reciprocal Rank Fusion score (results order)"
+    )
 
 
 class SearchResponse(BaseModel):
     query: str
+    strategy: Literal["vector", "hybrid"]
     results: list[SearchResult]
