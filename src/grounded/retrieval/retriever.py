@@ -78,6 +78,8 @@ class Retriever:
         ]
 
         # Log scores, never the query text: user questions can contain private data.
+        # (The database does keep the question in query_logs; see "Data retention"
+        # in DESIGN.md. Logs go to a wider audience, so they never get it.)
         logger.info(
             "retrieval_completed",
             collection_id=str(collection_id),

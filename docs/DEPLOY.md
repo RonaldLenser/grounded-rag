@@ -21,7 +21,7 @@ Browser ──HTTPS──> Cloud Run (container from Dockerfile, 0-2 instances, 
 | Control | Setting | Why |
 |---|---|---|
 | Per-IP rate limit | 10 questions/min, 30 searches/min | Stops one client looping requests |
-| Global daily cap | 300 LLM calls / rolling 24h (DB-backed) | Bounds worst-case spend across all instances |
+| Global daily cap | 300 LLM calls per UTC day, reserved atomically in Postgres before each call | Bounds worst-case spend across all instances; failed calls count too |
 | Relevance gate | No LLM call for off-topic questions | Off-topic spam costs $0 |
 | Writes | Admin API key only | The public can ask; only you can upload/delete |
 | Instances | min 0, max 2 | $0 when idle; caps runaway scaling |
@@ -133,6 +133,9 @@ do not leave the demo public until it's fixed.
 
 - Logs: Cloud Console -> Cloud Run -> `grounded` -> **Logs** (JSON logs; filter by
   `jsonPayload.request_id` to follow one request).
-- Usage: `query_logs` table (status, tokens, latency per question).
+- Usage: `query_logs` table (status, tokens, latency per question) and `llm_daily_usage`
+  (LLM calls reserved per UTC day).
+- Data retention: `query_logs` stores the raw question text with no automatic expiry. It is
+  deleted only when its collection is deleted. See "Data retention" in DESIGN.md.
 - Cold starts: with `min-instances 0` the first request after idle takes a few seconds.
   A real product would set `--min-instances 1` (costs money while idle).

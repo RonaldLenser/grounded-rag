@@ -106,11 +106,12 @@ Tradeoff: the request waits for the full pipeline. At scale this moves to a back
 3. Retrieve top candidates (vector, later hybrid).
 4. If best score < `MIN_RELEVANCE_SCORE`: return `insufficient_context`. **No LLM call.** (Saves money, blocks hallucination.)
 5. Build context: label chunks `S1..Sn`, wrap in `<source>` tags, cap by token budget.
-6. Call Claude with structured outputs (JSON schema): status, answer with [S#] markers, citations with source IDs + verbatim quotes.
-7. Validate citations: IDs must exist in retrieved set, quotes must appear in the cited chunk. Drop invalid ones. If answer is left unsupported, downgrade status.
-8. Map `S#` to filename, page, document ID.
-9. Log query (status, chunk IDs, scores, tokens, latency).
-10. Return structured response.
+6. Reserve one slot of the daily LLM budget (atomic, committed before the call).
+7. Call Claude with structured outputs (JSON schema): status + a list of claims, each with evidence (source ID + verbatim quote).
+8. Verify every claim's evidence in code. Build the visible answer ONLY from supported claims, with code-generated `[S#]` markers. Drop unsupported claims entirely; downgrade status.
+9. Map `S#` to filename, page, document ID.
+10. Log query (status, chunk IDs, scores, tokens, latency).
+11. Return structured response.
 
 ## 9. Exact Stack
 Python 3.12, FastAPI, Uvicorn, Pydantic v2, pydantic-settings, SQLAlchemy 2.0 async, asyncpg, Alembic, pgvector (Python + Postgres ext), pypdf, tiktoken, anthropic SDK, openai SDK (built-in retries), python-multipart, structlog, slowapi (rate limiting), pytest, pytest-asyncio, httpx2, ruff, mypy, pre-commit, uv, Docker, docker-compose, GitHub Actions, Google Cloud Run, Artifact Registry, Neon Postgres.
@@ -187,7 +188,9 @@ grounded-rag/
 ```json
 {
   "status": "answered | partial | insufficient_context",
-  "answer": "string",
+  "answer": "Leaders are accountable [S2].",
+  "notice": "string or null (e.g. some statements could not be verified)",
+  "claims": [{"text": "Leaders are accountable.", "source_ids": ["S2"]}],
   "citations": [
     {"source_id": "S2", "document_id": "uuid", "filename": "nist-ai-rmf.pdf",
      "page_start": 12, "page_end": 12, "quote": "exact supporting text"}
@@ -236,6 +239,10 @@ query_logs (
   retrieved_chunk_ids uuid[], scores float[], model text,
   input_tokens int, output_tokens int, latency_ms int, created_at timestamptz
 )
+
+llm_daily_usage (            -- global LLM budget, one row per UTC day (migration 0002)
+  day date PK, calls int NOT NULL CHECK (calls >= 0), updated_at timestamptz
+)
 ```
 Raw files are **not stored**. Extracted text lives in chunks. No object storage needed. (Tradeoff: cannot re-chunk without re-upload. Document it.)
 
@@ -263,25 +270,28 @@ Each step is a pure-ish function or small class with its own unit tests. Provide
 
 ## 16. Citation Strategy
 1. Context sources labeled `S1..Sn` (relevance order, capped by `MAX_CONTEXT_TOKENS`), each in `<source id="S1" file="..." pages="3-4">` tags. Source text, filenames and the question are HTML-escaped so document text can never close or forge tags.
-2. Claude replies via **structured outputs** (`output_config.format` = JSON Schema): `{status, answer, citations: [{source_id, quote}]}`. (Originally forced tool use; Sonnet 5.5 rejects forced `tool_choice` with a 400, so we moved to the provider's native structured-output feature.) The answer carries inline `[S1]` markers; each citation carries a verbatim quote. The output is validated with Pydantic before use (malformed = 502).
-3. **Server-side verification** (`generation/citations.py`):
+2. Claude replies via **structured outputs** (`output_config.format` = JSON Schema): `{status, claims: [{text, evidence: [{source_id, quote}]}]}`. Each claim is one factual statement with its own evidence. (Originally forced tool use; Sonnet 5.5 rejects forced `tool_choice` with a 400, so we moved to the provider's native structured-output feature.) The output is validated with Pydantic before use (malformed = 502). `source_id` and `quote` are deliberately unconstrained in the schema, so one bad item fails its claim, not the whole answer.
+3. **Server-side verification** (`generation/citations.py`), per evidence item:
    - `source_id` must be one we sent, else `unknown_source`.
-   - `quote` must appear in that source (case/whitespace/curly-quote/HTML-entity insensitive), else `quote_not_found`.
    - `quote` must be at least 12 characters, else `quote_too_short`.
-   - Markers without a verified citation are stripped from the answer.
-4. Response maps verified citations to filename, pages, heading, document and chunk IDs.
+   - `quote` must appear in that source (case/whitespace/curly-quote/HTML-entity insensitive), else `quote_not_found`.
+4. A claim is **supported** only if it has evidence and ALL of its evidence verifies. One fabricated quote rejects the whole claim.
+5. The answer is **built** from supported claims, with `[S#]` markers generated from verified evidence (markers the model wrote are discarded). Rejected claims are dropped, never edited, and their text never leaves the verifier (results carry rejection reasons only).
+6. Response maps verified evidence to filename, pages, heading, document and chunk IDs.
 
-Interview line: "I don't trust the model's citations. I verify them in code."
+**Why claims instead of an answer string (changed in M6.1):** the first version verified citations, then stripped markers whose citation failed. "Budgets are unlimited [S9]." became "Budgets are unlimited." and stayed visible with no support. Sentence-splitting the answer to find the unsupported sentence is brittle (abbreviations, lists, multi-sentence claims). Making the claim the unit the model returns removes the problem: there is no free-form text left to leak.
+
+Interview line: "The model never writes the answer. It proposes claims with evidence; code verifies each one and assembles the answer from what passed."
 
 ## 17. Hallucination Handling (layered)
 1. **Relevance gate:** best similarity below `MIN_RELEVANCE_SCORE` (0.20, provisional until M7) → `insufficient_context` with **no LLM call**.
-2. **Prompt contract:** sources only; cite every sentence; sources are untrusted data, not instructions.
-3. **Structured output:** API-enforced JSON schema; the model must declare a status.
-4. **Citation verification** (Section 16).
-5. **Status rules:** model refusal is trusted; zero verified citations → `insufficient_context` and the unverified answer is NOT shown; `answered` with any rejected citation → `partial`. `downgraded_from` is returned.
+2. **Prompt contract:** sources only; one claim per statement, each with exact quotes; sources are untrusted data, not instructions.
+3. **Structured output:** API-enforced JSON schema of claims with evidence; the model must declare a status.
+4. **Claim verification** (Section 16): only supported claims are shown.
+5. **Status rules:** model refusal → fixed refusal message (model-written refusal text is not shown); no supported claims → `insufficient_context`; `answered` with any rejected claim → `partial` with a notice that some statements could not be verified; model `partial` → notice that the documents only partly answer. `downgraded_from` is returned.
 6. **Logged + measured:** every query writes a `query_logs` row (status, chunk IDs, scores, model, tokens, latency). Question/answer text never goes to application logs.
 
-Honest limit: quote matching proves the quote exists, not that the answer correctly paraphrases it. The groundedness eval (M7) covers that partially. State this in README Limitations.
+Honest limit: quote matching proves the quote exists, not that the claim follows from it (entailment). A model could pair a true quote with an overreaching claim. The groundedness eval (M7) measures how often that happens. State this in README Limitations.
 
 ## 18. Evaluation Strategy
 - **Corpus:** 2 to 3 NIST AI RMF documents (public domain).
@@ -322,7 +332,7 @@ CI: GitHub Actions with a `pgvector/pgvector:pg16` service container. Gates: ruf
 - Web UI: all API data rendered via `textContent` (never HTML-parsed), enforced by a test; strict Content-Security-Policy (`script-src 'self'`, no inline code, `frame-ancestors 'none'`), `nosniff`, `no-referrer`. Verified with a browser XSS test (malicious filename + document text).
 - Container runs as non-root.
 - Error responses never leak stack traces; full details in logs with request ID.
-- Query logs store questions: note in README that the demo logs queries.
+- **Data retention (current behavior, stated plainly):** `query_logs.question` stores the raw question text, which can contain personal or confidential information. There is no automatic expiry: rows are deleted only when their collection is deleted (ON DELETE CASCADE). Answers are not stored. Application logs never contain question, answer or claim text (counts, scores and reasons only), because logs are shipped to Cloud Logging and read more widely than the database. The web UI tells users that questions are stored. Before handling real user data this needs a retention period (scheduled delete, e.g. 30 days) or hashing/redaction, plus a privacy notice.
 
 ## 21. Environment Variables
 ```
@@ -355,9 +365,9 @@ Full runbook: [DEPLOY.md](DEPLOY.md). Summary:
 4. `gcloud run deploy --source .` (Cloud Build builds the plain-syntax Dockerfile): us-east4, min 0 / max 2 instances, 1 GiB, concurrency 20, `APP_ENV=prod`, `TRUSTED_PROXY_HOPS=1`.
 5. `scripts/seed_demo.py` loads the NIST corpus; `scripts/smoke_test.py --check-rate-limit` verifies end to end, including X-Forwarded-For spoofing resistance.
 
-Abuse/cost controls: per-IP sliding-window limits (10 queries/min, 30 searches/min, in-memory per instance), a DB-backed global cap of 300 LLM calls per rolling 24h, admin-key-only writes. uvicorn runs with `--no-proxy-headers` so exactly one component (the app) derives the client IP.
+Abuse/cost controls: per-IP sliding-window limits (10 queries/min, 30 searches/min, in-memory per instance), a global cap of 300 LLM calls per UTC day (each call reserves a slot atomically in Postgres before it runs), admin-key-only writes. uvicorn runs with `--no-proxy-headers` so exactly one component (the app) derives the client IP.
 
-Tradeoffs: scale-to-zero cold starts (a few seconds); rate limits are per instance (max 2x with 2 instances), while the daily budget is exact. CI/CD via GitHub Actions + Workload Identity Federation is a later improvement; deploys are a single scripted command for now.
+Tradeoffs: scale-to-zero cold starts (a few seconds); rate limits are per instance (max 2x with 2 instances), while the daily budget is global and atomic. It is a fixed UTC-day window, so up to 2x the limit can be used across midnight (300 at 23:59 + 300 at 00:00); failed calls count against it; one "call" can be up to 1 + `LLM_MAX_RETRIES` HTTP attempts. CI/CD via GitHub Actions + Workload Identity Federation is a later improvement; deploys are a single scripted command for now.
 
 ## 23. README Outline
 1. Title + one-line pitch + badges (CI, license, Python)

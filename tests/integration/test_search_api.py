@@ -127,6 +127,27 @@ def test_empty_collection_returns_no_results(api: TestClient) -> None:
     assert _search(api, collection_id, "anything")["results"] == []
 
 
+def test_only_ready_documents_are_searched(api: TestClient) -> None:
+    """Chunks of a document that is processing or failed must never be used to answer."""
+    collection_id = _seeded(api)
+    extra_id = _upload(api, collection_id, "extra.md", b"# Extra\n\nGovernance audits.")
+
+    async def mark_failed() -> None:
+        engine = create_async_engine(os.environ["DATABASE_URL"])
+        async with engine.begin() as conn:
+            await conn.execute(
+                text("UPDATE documents SET status = 'failed' WHERE id = :id"),
+                {"id": extra_id},
+            )
+        await engine.dispose()
+
+    asyncio.run(mark_failed())
+    body = _search(api, collection_id, "Governance audits", top_k=10)
+
+    assert body["results"], "ready documents are still searched"
+    assert extra_id not in {r["document_id"] for r in body["results"]}
+
+
 def test_query_is_embedded_once_with_the_document_model(
     api: TestClient, fake_embedder: FakeEmbedder
 ) -> None:

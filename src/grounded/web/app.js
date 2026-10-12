@@ -248,15 +248,14 @@ function renderResult(result) {
   badge.className = `badge ${result.status}`;
   badge.textContent = STATUS_LABELS[result.status] || result.status;
 
-  const note = $("downgrade-note");
-  const rejected = result.verification.citations_rejected;
-  note.hidden = rejected === 0;
-  note.textContent = `${rejected} citation${rejected === 1 ? "" : "s"} failed verification and ${
-    rejected === 1 ? "was" : "were"
-  } removed`;
+  // Server-written notice (e.g. "some statements could not be verified"). The
+  // unverified statements themselves are never sent to the browser.
+  const notice = $("answer-notice");
+  notice.hidden = !result.notice;
+  notice.textContent = result.notice || "";
 
   renderAnswer(result.answer);
-  $("citations").replaceChildren(...result.citations.map(renderCitation));
+  $("citations").replaceChildren(...groupBySource(result.citations).map(renderSourceCard));
   $("meta").textContent = describeUsage(result);
 }
 
@@ -279,21 +278,37 @@ function renderAnswer(answer) {
   );
 }
 
-function renderCitation(citation) {
+// One card per source, even when Claude quotes the same source several times.
+// (Also keeps element ids unique, so [S2] always jumps to the right card.)
+function groupBySource(citations) {
+  const groups = new Map();
+  for (const citation of citations) {
+    if (!groups.has(citation.source_id)) groups.set(citation.source_id, []);
+    groups.get(citation.source_id).push(citation);
+  }
+  return [...groups.values()];
+}
+
+function renderSourceCard(citations) {
+  const first = citations[0];
   const li = document.createElement("li");
-  li.id = `cite-${citation.source_id}`;
+  li.id = `cite-${first.source_id}`;
 
   const source = document.createElement("div");
   source.className = "cite-source";
   const tag = document.createElement("strong");
-  tag.textContent = citation.source_id;
-  source.append(tag, ` · ${citation.filename}${formatPages(citation)}`);
-  if (citation.heading) source.append(` · ${citation.heading}`);
+  tag.textContent = first.source_id;
+  source.append(tag, ` · ${first.filename}${formatPages(first)}`);
+  if (first.heading) source.append(` · ${first.heading}`);
+  if (citations.length > 1) source.append(` · ${citations.length} quotes`);
 
-  const quote = document.createElement("blockquote");
-  quote.textContent = `“${citation.quote}”`;
+  const quotes = citations.map((citation) => {
+    const quote = document.createElement("blockquote");
+    quote.textContent = `“${citation.quote}”`;
+    return quote;
+  });
 
-  li.append(source, quote);
+  li.append(source, ...quotes);
   return li;
 }
 
@@ -312,7 +327,9 @@ function focusCitation(sourceId) {
 
 function describeUsage(result) {
   const seconds = (result.latency_ms / 1000).toFixed(1);
-  const verified = plural(result.verification.citations_verified, "verified citation");
+  const { claims_supported: supported, claims_rejected: rejected } = result.verification;
+  const dropped = rejected ? ` (${rejected} dropped)` : "";
+  const verified = `${plural(supported, "verified claim")}${dropped}`;
   if (!result.usage.llm_called) {
     const score = result.retrieval.top_score;
     const best = score == null ? "no documents" : `best match ${score.toFixed(2)}`;

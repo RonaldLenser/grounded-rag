@@ -66,7 +66,9 @@ def clean_tables(migrated: None) -> None:
     async def truncate() -> None:
         engine = create_async_engine(os.environ["DATABASE_URL"])
         async with engine.begin() as conn:
-            await conn.execute(text("TRUNCATE collections, documents, chunks, query_logs CASCADE"))
+            await conn.execute(
+                text("TRUNCATE collections, documents, chunks, query_logs, llm_daily_usage CASCADE")
+            )
         await engine.dispose()
 
     asyncio.run(truncate())

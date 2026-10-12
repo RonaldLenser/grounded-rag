@@ -73,8 +73,10 @@ class Settings(BaseSettings):
     # Per client IP, per app instance (in-memory sliding window).
     rate_limit_query_per_minute: int = Field(default=10, ge=1, le=10_000)
     rate_limit_search_per_minute: int = Field(default=30, ge=1, le=10_000)
-    # Global cap on LLM calls per rolling 24h, counted in the database so it
-    # holds across all instances. Worst-case daily spend is bounded by this.
+    # Global cap on LLM calls per UTC day. Each call reserves a slot atomically
+    # in Postgres before it runs, so it holds across instances and under
+    # concurrency, and failed calls count too. Worst-case daily spend is bounded
+    # by this (times 1 + llm_max_retries HTTP attempts per call).
     daily_llm_query_limit: int = Field(default=300, ge=1)
     # How many proxies in front of the app append to X-Forwarded-For.
     # 0 = trust nothing, use the TCP peer (local / docker compose).
