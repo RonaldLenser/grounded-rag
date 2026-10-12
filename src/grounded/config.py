@@ -51,6 +51,11 @@ class Settings(BaseSettings):
     max_upload_mb: int = Field(default=10, ge=1, le=100)
     max_pdf_pages: int = Field(default=500, ge=1)
 
+    # ----- Retrieval -----
+    retrieval_top_k: int = Field(default=6, ge=1, le=20)
+    # HNSW search breadth: higher = better recall, slower. pgvector's default is 40.
+    hnsw_ef_search: int = Field(default=100, ge=10, le=1000)
+
     @field_validator("database_url")
     @classmethod
     def require_async_driver(cls, value: str) -> str:

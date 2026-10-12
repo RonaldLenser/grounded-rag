@@ -251,7 +251,9 @@ Each step is a pure-ish function or small class with its own unit tests. Provide
 - **Why not semantic chunking:** extra embedding cost and complexity for unproven gain. Mention as future work backed by eval.
 
 ## 15. Retrieval Strategy
-- **MVP (M3):** pgvector cosine similarity, top_k = 6.
+- **MVP (M3):** pgvector cosine similarity, top_k = 6 (max 20), `hnsw.ef_search = 100`.
+- **Filtered HNSW:** the index finds neighbors across all collections, then the collection filter applies. `hnsw.iterative_scan = strict_order` (pgvector 0.8) keeps scanning so small collections still get `top_k` results. Both settings are transaction-local (`set_config(..., true)`).
+- Small collections: the planner may skip HNSW and do an exact scan + sort (cheaper for few rows). A test proves the query shape stays index-compatible for large collections.
 - **M8 upgrade:** hybrid. Vector top 20 + Postgres full-text top 20, merged with **Reciprocal Rank Fusion** (`score = Σ 1/(60 + rank)`), keep top 6.
   - Why hybrid: embeddings miss exact terms (acronyms, IDs, section numbers like "GOVERN 1.2"). Keyword search catches them.
 - Collapse adjacent chunks from the same doc to save context tokens.

@@ -98,6 +98,16 @@ class SmokeTest:
             listed.status_code == 200 and [d["id"] for d in listed.json()] == [document["id"]],
         )
 
+        relevant = self._top_score(
+            collection_id, "How is AI risk measured with quantitative tools?"
+        )
+        unrelated = self._top_score(collection_id, "best chocolate chip cookie recipe")
+        self.check(
+            "search ranks a relevant question above an unrelated one (real embeddings)",
+            relevant is not None and unrelated is not None and relevant > unrelated,
+            f"relevant={relevant}, unrelated={unrelated}",
+        )
+
         duplicate = self.client.post(
             f"/v1/collections/{collection_id}/documents",
             files={"file": ("renamed.pdf", SAMPLE_PDF.read_bytes(), "application/pdf")},
@@ -123,6 +133,13 @@ class SmokeTest:
             return 1
         print("ALL CHECKS PASSED")
         return 0
+
+    def _top_score(self, collection_id: str, query: str) -> float | None:
+        response = self.client.post(
+            f"/v1/collections/{collection_id}/search", json={"query": query, "top_k": 1}
+        )
+        results = response.json().get("results") if response.status_code == 200 else None
+        return round(results[0]["score"], 3) if results else None
 
 
 def _fail(response: httpx2.Response) -> str:
