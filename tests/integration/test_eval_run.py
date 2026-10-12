@@ -147,3 +147,27 @@ def test_daily_budget_exhaustion_aborts_instead_of_retrying() -> None:
 
     with pytest.raises(EvalAbortedError, match="daily"):
         _post(client, "/x", {}, lambda _: None)
+
+
+class _FlakyJudgeLLM(ScriptedLLM):
+    """Fails on the answer-correctness call, like a judge reply cut off at max_tokens."""
+
+    async def complete_structured(self, **kwargs: Any) -> Any:
+        if kwargs["output"].name == "answer_correctness":
+            raise RuntimeError("judge reply cut off")
+        return await super().complete_structured(**kwargs)
+
+
+async def test_a_judge_failure_is_recorded_and_the_run_continues(
+    api: TestClient, tmp_path: Path
+) -> None:
+    collection_id = _seed(api)
+    results = collect(api, ITEMS, collection_id, query_interval=0, log=lambda _: None)
+    llm = _FlakyJudgeLLM({"claim_support": {"verdict": "supported", "reason": "ok"}})
+
+    await judge_all(results, Judge(llm), log=lambda _: None)
+
+    answered = results[0]
+    assert answered.judge_error == "RuntimeError: judge reply cut off"
+    assert answered.claim_judgments == [], "no half-judged question is counted"
+    assert answered.answer_judgment is None
