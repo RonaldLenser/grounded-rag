@@ -18,7 +18,7 @@ from openai import AsyncOpenAI
 from grounded import __version__
 from grounded.api.errors import register_error_handlers
 from grounded.api.middleware import RequestContextMiddleware
-from grounded.api.routes import collections, health
+from grounded.api.routes import collections, health, search
 from grounded.config import Settings, get_settings
 from grounded.db.session import create_engine, create_session_factory
 from grounded.logging_config import configure_logging
@@ -83,4 +83,5 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     register_error_handlers(app)
     app.include_router(health.router)
     app.include_router(collections.router)
+    app.include_router(search.router)
     return app
