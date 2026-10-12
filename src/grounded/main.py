@@ -14,12 +14,13 @@ from contextlib import asynccontextmanager
 import structlog
 from anthropic import AsyncAnthropic
 from fastapi import FastAPI
+from fastapi.staticfiles import StaticFiles
 from openai import AsyncOpenAI
 
 from grounded import __version__
 from grounded.api.errors import register_error_handlers
 from grounded.api.middleware import RequestContextMiddleware
-from grounded.api.routes import collections, health, query, search
+from grounded.api.routes import collections, health, query, search, web
 from grounded.config import Settings, get_settings
 from grounded.db.session import create_engine, create_session_factory
 from grounded.logging_config import configure_logging
@@ -101,4 +102,6 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.include_router(collections.router)
     app.include_router(search.router)
     app.include_router(query.router)
+    app.include_router(web.router)
+    app.mount("/static", StaticFiles(directory=web.WEB_DIR), name="static")
     return app
