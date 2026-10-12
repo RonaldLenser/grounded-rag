@@ -14,10 +14,10 @@ from pydantic import SecretStr
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import create_async_engine
 
-from grounded.api.deps import get_embedder
+from grounded.api.deps import get_embedder, get_llm
 from grounded.config import Settings
 from grounded.main import create_app
-from tests.fakes import FakeEmbedder
+from tests.fakes import FakeEmbedder, FakeLLM
 
 ADMIN_KEY = "test-admin-key-0123456789"
 
@@ -78,9 +78,15 @@ def fake_embedder() -> FakeEmbedder:
 
 
 @pytest.fixture
-def api(fake_embedder: FakeEmbedder) -> Iterator[TestClient]:
-    """A client for the full app: real database, fake embeddings, admin key configured."""
-    settings = Settings(
+def fake_llm() -> FakeLLM:
+    return FakeLLM()
+
+
+@pytest.fixture
+def api(fake_embedder: FakeEmbedder, fake_llm: FakeLLM) -> Iterator[TestClient]:
+    """The full app: real database, fake embeddings + fake LLM, admin key configured."""
+    settings = Settings(  # type: ignore[call-arg]
+        _env_file=None,  # tests must not depend on a developer's local .env
         app_env="test",
         database_url=os.environ["DATABASE_URL"],
         admin_api_key=SecretStr(ADMIN_KEY),
@@ -88,5 +94,6 @@ def api(fake_embedder: FakeEmbedder) -> Iterator[TestClient]:
     )
     app = create_app(settings)
     app.dependency_overrides[get_embedder] = lambda: fake_embedder
+    app.dependency_overrides[get_llm] = lambda: fake_llm
     with TestClient(app, headers={"X-API-Key": ADMIN_KEY}) as client:
         yield client

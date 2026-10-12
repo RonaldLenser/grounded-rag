@@ -48,6 +48,8 @@ services:
       DATABASE_URL: postgresql+asyncpg://grounded:grounded@db:5432/grounded
       # Read from your local .env (gitignored). Unset = feature disabled, app still starts.
       OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+      LLM_MODEL: ${LLM_MODEL:-claude-sonnet-5-5}
       ADMIN_API_KEY: ${ADMIN_API_KEY:-}
     ports:
       - "8000:8000"

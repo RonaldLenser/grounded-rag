@@ -72,3 +72,10 @@ class EmbeddingProviderError(AppError):
 
     status_code = 502
     code = "embedding_provider_error"
+
+
+class LLMProviderError(AppError):
+    """The LLM API failed after retries, or returned output we can't use."""
+
+    status_code = 502
+    code = "llm_provider_error"
