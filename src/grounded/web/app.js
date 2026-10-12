@@ -71,7 +71,15 @@ function initAdminKey() {
     } catch {
       /* ignore */
     }
+    syncAdminControls();
   });
+  syncAdminControls();
+}
+
+// Admin-only controls (document delete) are hidden until a key is entered.
+// This is UX, not security: the API rejects deletes without a valid key.
+function syncAdminControls() {
+  document.body.classList.toggle("has-admin-key", getAdminKey().trim() !== "");
 }
 
 function setAdminStatus(message, ok) {
@@ -133,7 +141,7 @@ function renderDocument(doc) {
 
   const remove = document.createElement("button");
   remove.type = "button";
-  remove.className = "link";
+  remove.className = "link admin-only";
   remove.textContent = "delete";
   remove.title = `Delete ${doc.filename}`;
   remove.addEventListener("click", () => deleteDocument(doc));

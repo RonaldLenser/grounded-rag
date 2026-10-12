@@ -5,7 +5,12 @@ import pytest
 from pypdf import PdfWriter
 
 from grounded.errors import UnprocessableDocumentError, UnsupportedDocumentError
-from grounded.ingestion.parsers import detect_content_type, normalize_text, parse_document
+from grounded.ingestion.parsers import (
+    detect_content_type,
+    normalize_text,
+    parse_document,
+    repair_pdf_line_breaks,
+)
 
 FIXTURES = Path(__file__).parent.parent / "fixtures"
 
@@ -99,3 +104,83 @@ def test_normalize_text() -> None:
     raw = "a  b\t\tc   \r\nline2\r\n\r\n\r\n\r\nline3\x00"
 
     assert normalize_text(raw) == "a b c\nline2\n\nline3"
+
+
+# --- PDF line-break repair ----------------------------------------------------
+
+
+def test_soft_hyphen_is_joined_when_the_word_appears_elsewhere() -> None:
+    pages = ["Examples are illus-\ntrated below.", "As illustrated in Figure 2."]
+
+    assert repair_pdf_line_breaks(pages)[0] == "Examples are illustrated below."
+
+
+def test_real_hyphen_is_kept_when_the_compound_appears_elsewhere() -> None:
+    pages = ["Use red-\nteaming exercises.", "Plan red-teaming early."]
+
+    assert repair_pdf_line_breaks(pages)[0] == "Use red-teaming exercises."
+
+
+def test_split_word_is_not_evidence_for_itself() -> None:
+    # "subcate-\ngories" must not count "subcategories" as having been seen.
+    # No other evidence and no majority: the tie keeps the hyphen.
+    assert repair_pdf_line_breaks(["All subcate-\ngories apply."]) == ["All subcate-gories apply."]
+
+
+def test_ambiguous_split_follows_the_document_majority() -> None:
+    soft_hyphen_document = [
+        "illus-\ntrated and manag-\ning and subcate-\ngories",
+        "illustrated managing",
+    ]
+
+    repaired = repair_pdf_line_breaks(soft_hyphen_document)
+
+    assert repaired[0] == "illustrated and managing and subcategories"
+
+
+def test_ambiguous_split_keeps_the_hyphen_in_a_real_hyphen_document() -> None:
+    real_hyphen_document = [
+        "red-\nteaming and fine-\ntuning and multi-\nmodal",
+        "red-teaming fine-tuning",
+    ]
+
+    repaired = repair_pdf_line_breaks(real_hyphen_document)
+
+    assert repaired[0] == "red-teaming and fine-tuning and multi-modal"
+
+
+@pytest.mark.parametrize(
+    "text",
+    [
+        "the AI-\nRMF document",  # second fragment capitalized
+        "risks of-\nthe system",  # stopword fragment
+        "years 2023-\n2024 only",  # number ranges
+    ],
+)
+def test_guarded_splits_without_evidence_are_not_guessed(text: str) -> None:
+    # The rest of the document votes "join", but these have no evidence of their own.
+    soft_hyphen_majority = "illus-\ntrated manag-\ning, illustrated managing"
+
+    assert repair_pdf_line_breaks([text, soft_hyphen_majority])[0] == text
+
+
+def test_evidence_overrides_the_guards() -> None:
+    pages = ["They in-\nclude the GOV-\nERN function.", "This will include GOVERN."]
+
+    assert repair_pdf_line_breaks(pages)[0] == "They include the GOVERN function."
+
+
+def test_space_before_punctuation_is_removed() -> None:
+    assert repair_pdf_line_breaks(["GOVERN , MAP , and MEASURE ."]) == ["GOVERN, MAP, and MEASURE."]
+
+
+def test_space_before_punctuation_keeps_decimals_and_leading_dots() -> None:
+    text = "version 1 .5 and the .NET runtime"
+
+    assert repair_pdf_line_breaks([text]) == [text]
+
+
+def test_markdown_and_text_are_not_repaired() -> None:
+    parsed = parse_document("n.md", b"keep this-\nas is , exactly", max_pdf_pages=10)
+
+    assert parsed.pages[0].text == "keep this-\nas is , exactly"

@@ -66,6 +66,9 @@ def parse_document(filename: str, data: bytes, *, max_pdf_pages: int) -> ParsedD
         pages = [Page(number=None, text=_decode_text(data))]
 
     pages = [Page(number=page.number, text=normalize_text(page.text)) for page in pages]
+    if content_type == "application/pdf":
+        repaired = repair_pdf_line_breaks([page.text for page in pages])
+        pages = [Page(number=p.number, text=t) for p, t in zip(pages, repaired, strict=True)]
     if not any(page.text for page in pages):
         raise UnprocessableDocumentError(
             "No extractable text found. Scanned/image-only PDFs need OCR, which isn't supported."
@@ -120,3 +123,84 @@ def normalize_text(text: str) -> str:
     text = _RUNS_OF_SPACES.sub(" ", text)
     text = _THREE_PLUS_NEWLINES.sub("\n\n", text)
     return text.strip()
+
+
+# --- PDF line-break repair ----------------------------------------------------
+#
+# PDF text extraction keeps the typesetter's line breaks. A word split across
+# lines comes out as "illus-\ntrated", which shows up in citation quotes as
+# "illus- trated" and hides the word from keyword search. The hard part: a
+# trailing hyphen is sometimes a soft hyphen (join: "illustrated") and
+# sometimes a real one ("red-\nteaming" must stay "red-teaming").
+#
+# The text can't tell us which, but the rest of the DOCUMENT usually can:
+#   1. "red-teaming" appears inline elsewhere  -> it's a real hyphen: keep it
+#   2. "illustrated" appears as a word elsewhere -> soft hyphen: join
+#   3. no evidence -> follow this document's majority (typesetters are
+#      consistent within one document); ties keep the hyphen, because a wrong
+#      hyphen is less damaging than a wrongly glued word.
+# Evidence always wins. Without evidence, splits whose fragments are stopwords,
+# numbers, or start uppercase ("of-\nthe", "2023-\n2024", "End-\nUsers") are
+# left as extracted instead of guessed: the majority rule is unreliable there.
+
+_LINE_BREAK_HYPHEN = re.compile(r"(\w+)-\n(\w+)")
+_WORD = re.compile(r"\w+")
+_COMPOUND = re.compile(r"\w+-\w+")
+_SPACE_BEFORE_PUNCT = re.compile(r"(?<=\w) +(?=[,.;:!?](?:\s|$))")
+_NEVER_JOIN = frozenset(
+    {"a", "an", "and", "or", "the", "to", "of", "in", "on", "for", "with", "by"}
+)
+
+
+def repair_pdf_line_breaks(texts: list[str]) -> list[str]:
+    """Rejoin words hyphenated across line breaks, using the whole document as evidence.
+
+    Takes every page of one document (evidence is document-wide) and returns the
+    pages in the same order. Also removes stray spaces before punctuation that
+    PDF extraction inserts ("GOVERN , MAP" -> "GOVERN, MAP").
+    """
+    # Evidence comes from text OUTSIDE the line-break hyphens, so a split word
+    # can't count as evidence for itself.
+    flat = _LINE_BREAK_HYPHEN.sub(" ", "\n".join(texts)).lower()
+    words = set(_WORD.findall(flat))
+    compounds = set(_COMPOUND.findall(flat))
+
+    decisions: dict[tuple[str, str], str | None] = {}  # "keep" | "join" | None (unknown)
+    votes = {"keep": 0, "join": 0}
+    for match in _LINE_BREAK_HYPHEN.finditer("\n".join(texts)):
+        first, second = match.group(1), match.group(2)
+        decision = _evidence(first, second, words, compounds)
+        decisions[(first, second)] = decision
+        if decision is not None:
+            votes[decision] += 1
+    default = "join" if votes["join"] > votes["keep"] else "keep"
+
+    def fix(match: re.Match[str]) -> str:
+        first, second = match.group(1), match.group(2)
+        decision = decisions.get((first, second))
+        if decision is None:
+            if _is_guarded(first, second):
+                return match.group(0)  # no evidence and not a safe guess: leave as extracted
+            decision = default
+        return first + second if decision == "join" else f"{first}-{second}"
+
+    repaired = [_LINE_BREAK_HYPHEN.sub(fix, text) for text in texts]
+    return [_SPACE_BEFORE_PUNCT.sub("", text) for text in repaired]
+
+
+def _is_guarded(first: str, second: str) -> bool:
+    return (
+        second[0].isupper()
+        or first.lower() in _NEVER_JOIN
+        or second.lower() in _NEVER_JOIN
+        or first.isdigit()
+        or second.isdigit()
+    )
+
+
+def _evidence(first: str, second: str, words: set[str], compounds: set[str]) -> str | None:
+    if f"{first}-{second}".lower() in compounds:
+        return "keep"
+    if (first + second).lower() in words:
+        return "join"
+    return None

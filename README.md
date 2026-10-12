@@ -6,61 +6,124 @@
 
 **A RAG knowledge assistant that answers only from your documents, cites the exact page and passage for every claim, and says so when the answer isn't there.**
 
-## Live demo
-
-**https://grounded-1004795551444.us-east4.run.app**
+**Live demo: https://grounded-1004795551444.us-east4.run.app**
 
 Preloaded with two public NIST documents (AI Risk Management Framework 1.0 and the Generative AI
-Profile, 112 pages). Ask something they cover ("What are the four functions of the AI RMF
-Core?") and something they don't ("What is the capital of France?") to see a cited answer and
-a refusal. First load after idle takes a few seconds (scales to zero).
+Profile, 112 pages). Try "What are the four functions of the AI RMF Core?" and then "What is the
+capital of France?" to see a cited answer and a refusal. First load after idle takes a few
+seconds (scales to zero).
 
-Rate limited per IP with a global daily cap on LLM calls. Uploads require an admin key.
+## Highlights
 
-> Status: deployed and usable. Evaluation harness, hybrid retrieval and streaming are next.
-> See the [design doc](docs/DESIGN.md) for the full architecture and roadmap.
+- **The model never writes the answer.** Claude returns structured claims, each with exact quotes
+  as evidence. Code checks every quote against the source text and builds the answer only from
+  claims that pass. An unsupported claim is dropped, never shown.
+- **Refuses instead of guessing.** A relevance gate refuses off-topic questions before any LLM
+  call; the threshold (0.20) was calibrated from eval data, not picked by hand.
+- **Hybrid retrieval chosen by measurement.** Vector search + IDF-weighted keyword search, merged
+  with Reciprocal Rank Fusion. Shipped behind a flag and made the default only after the eval
+  showed it fixed both retrieval misses with no regressions.
+- **Evaluation harness.** A 33-question golden set run against the live API, scored for retrieval,
+  refusals, citations, and (with an LLM judge that states its reasons) claim support and answer
+  correctness. Reports are committed in [docs/evals/](docs/evals/).
+- **Deployed like a real service.** Cloud Run + Neon Postgres, secrets in Secret Manager, per-IP
+  rate limits, and an atomic daily LLM budget enforced in the database. 240+ tests, strict mypy,
+  CI on every push.
 
-## What it does
+## Results
 
-- Upload PDFs, Markdown, and text files
-- Ask questions in plain English
-- Get answers built from claims whose quotes are **verified in code**; a claim that fails verification is dropped, never shown
-- Get an explicit "not in your documents" instead of a confident guess
+Live demo, Claude Sonnet 5.5, judged by Claude Haiku 5.5. Same 33 questions before and after
+hybrid retrieval:
+
+| What | Vector only ([v1](docs/evals/2026-10-12-v1.md)) | Hybrid ([v2](docs/evals/2026-10-12-v2-hybrid.md)) |
+|---|---|---|
+| Answerable questions answered (not refused) | 22 / 24 | **24 / 24** |
+| Answers correct vs hand-written reference (LLM judge) | 22 / 22 | **24 / 24** |
+| Right page retrieved: top 3 / top 6 | 88% / 92% | **100% / 100%** |
+| Retrieval MRR | 0.81 | **0.88** |
+| Unanswerable and off-topic questions: no unsupported answer | 9 / 9 | 9 / 9 |
+| Shown claims NOT supported by their quotes (LLM judge) | 0 / 78 | 0 / 86 |
+| Latency p50 / p95 (LLM answers) | 2.9s / 6.5s | 3.4s / 7.1s |
+
+Small sample, and the keyword method was chosen after seeing these questions' failures: treat this
+as a regression check, not a benchmark. Full analysis in [Evaluation](#evaluation).
+
+## How it works
+
+```mermaid
+flowchart LR
+    subgraph Ingest["Ingest (admin)"]
+        U[Upload PDF / MD / TXT] --> P[Parse + clean text]
+        P --> C[Chunk ~500 tokens<br/>with page numbers]
+        C --> E1[Embed<br/>OpenAI]
+    end
+    E1 --> DB[(Postgres<br/>pgvector + full-text)]
+
+    subgraph Ask
+        Q[Question] --> E2[Embed]
+        E2 --> R[Hybrid retrieval<br/>vector + keyword, RRF]
+        DB --> R
+        R --> G{Best similarity<br/>>= 0.20?}
+        G -- no --> X[Refuse<br/>no LLM call]
+        G -- yes --> L[Claude: claims +<br/>quoted evidence<br/>JSON schema]
+        L --> V[Verify every quote<br/>against its source]
+        V --> A[Answer built from<br/>verified claims only]
+    end
+```
+
+1. **Ingest:** files are checked by content (not extension), parsed page by page, cleaned (PDF
+   line-break hyphens repaired), split into ~500-token chunks with 75 tokens of overlap, embedded,
+   and stored with page numbers and headings. Duplicate uploads are detected by SHA-256.
+2. **Retrieve:** the question is embedded; Postgres returns the top 20 chunks by cosine similarity
+   (HNSW index) and the top 20 by IDF-weighted keyword match; Reciprocal Rank Fusion keeps the
+   best 6.
+3. **Gate:** if no retrieved chunk is similar enough, the API refuses without calling the LLM.
+4. **Generate:** sources are labeled `S1..S6` and sent to Claude, which must reply in a JSON
+   schema: a status and a list of claims, each with `{source_id, quote}` evidence.
+5. **Verify:** a claim is shown only if every quote exists in the source it cites (normalized for
+   whitespace, case, and curly quotes). Citation markers are generated by code, not the model.
+6. **Respond + log:** the API returns the answer, claims, verified citations (file, page,
+   passage), and a status: `answered`, `partial` (with a notice), or `insufficient_context`.
+
+## Design decisions
+
+| Decision | Why | Tradeoff |
+|---|---|---|
+| Claim-level structured output instead of free text | Removing a bad citation from free text leaves the unsupported sentence visible. With claims, there is no free text left to leak. | Longer outputs (needed a 2048-token cap, found by the eval). |
+| Verify quotes in code | Cheap, deterministic, and catches fabricated citations. | Proves the quote exists, not that the claim follows from it. The LLM judge measures that gap. |
+| Postgres for vectors and keywords | One database, transactional deletes, no extra service to run. | A dedicated vector DB would scale further; not needed at this size. |
+| IDF-weighted keyword search, not `ts_rank` | Postgres's default ranking found 19/24 expected pages; IDF weighting found 22/24 (measured before building). | Custom SQL to maintain. |
+| Gate on best cosine score, not first result | Keeps the calibrated threshold meaningful after fusion reorders results. | None found. |
+| Atomic daily budget (`INSERT ... ON CONFLICT ... WHERE calls < limit`) | A read-then-write check lets concurrent requests overspend. A test fires 25 concurrent requests at a limit of 10. | Failed LLM calls still count against the budget. |
+
+More in the [design doc](docs/DESIGN.md).
 
 ## Stack
 
-FastAPI · PostgreSQL + pgvector + full-text search · SQLAlchemy 2.0 (async) + Alembic · Claude (generation) · OpenAI embeddings · structlog · Docker · Google Cloud Run
+Python 3.12 · FastAPI · PostgreSQL + pgvector + full-text search · SQLAlchemy 2.0 (async) +
+Alembic · Claude Sonnet 5.5 (generation) · OpenAI `text-embedding-3-small` · Pydantic v2 ·
+structlog · pytest · ruff + mypy (strict) · Docker · GitHub Actions · Google Cloud Run + Neon
 
-## Roadmap
+## Run it
 
-- [x] M0: Project scaffold, tooling, CI
-- [x] M1: Config, structured logging, database schema, migrations, Docker Compose
-- [x] M2: Document ingestion (parse, chunk, embed, store)
-- [x] M3: Vector search
-- [x] M4: Cited answers with citation verification and refusals
-- [x] M5: Web UI
-- [x] M6: Deploy (Cloud Run + Neon, rate limits, daily LLM budget)
-- [x] M7: Evaluation harness (33-question golden set, LLM judge, results below)
-- [x] M8: Hybrid retrieval (IDF-weighted keyword search + RRF; won the eval, now the default)
-- [ ] M9: Streaming
-- [ ] M10: Docs and demo
+### Docker (quickest)
 
-## Quickstart (Docker)
-
-Requires [Docker](https://www.docker.com/products/docker-desktop/).
+Requires [Docker](https://www.docker.com/products/docker-desktop/). Copy `.env.example` to `.env`
+and set `OPENAI_API_KEY`, `ANTHROPIC_API_KEY`, and `ADMIN_API_KEY`, then:
 
 ```bash
 docker compose up --build
 ```
 
-Starts Postgres + pgvector, applies database migrations, then serves the API.
-
 - Web app: http://localhost:8000 (upload documents, ask questions, click citations)
 - API docs: http://localhost:8000/docs
-- Liveness: http://localhost:8000/health
-- Readiness (checks the database): http://localhost:8000/ready
+- Liveness / readiness: http://localhost:8000/health, http://localhost:8000/ready
 
-## Local development
+Load the demo corpus: `uv run python scripts/seed_demo.py` (add `--replace` to re-ingest after
+changing parsing or chunking).
+
+<details>
+<summary><b>Local development</b></summary>
 
 Requires [uv](https://docs.astral.sh/uv/) and Docker (for the database).
 
@@ -73,21 +136,29 @@ uv run alembic upgrade head             # create/upgrade the schema
 uv run uvicorn grounded.main:create_app --factory --reload
 ```
 
-### Try the API
-
-Set `OPENAI_API_KEY`, `ANTHROPIC_API_KEY` and `ADMIN_API_KEY` in `.env`, start the app, then:
+Database migrations:
 
 ```bash
-# create a collection
+uv run alembic revision --autogenerate -m "describe change"   # then REVIEW the generated file
+uv run alembic upgrade head
+```
+
+</details>
+
+<details>
+<summary><b>API examples</b></summary>
+
+```bash
+# create a collection (admin)
 curl -X POST localhost:8000/v1/collections \
   -H "X-API-Key: $ADMIN_API_KEY" -H "Content-Type: application/json" \
   -d '{"name": "my-docs"}'
 
-# upload a document (PDF, .md, or .txt)
+# upload a document: PDF, .md, or .txt (admin)
 curl -X POST localhost:8000/v1/collections/<collection-id>/documents \
   -H "X-API-Key: $ADMIN_API_KEY" -F "file=@policy.pdf"
 
-# search: the most relevant chunks for a question (no admin key needed)
+# search: the most relevant chunks for a question
 curl -X POST localhost:8000/v1/collections/<collection-id>/search \
   -H "Content-Type: application/json" \
   -d '{"query": "What does the policy say about accountability?", "top_k": 3}'
@@ -100,89 +171,94 @@ curl -X POST localhost:8000/v1/collections/<collection-id>/query \
 
 Or use the interactive docs at http://localhost:8000/docs (click **Authorize** and paste the admin key).
 
-### Smoke test
+</details>
 
-With the app running (`docker compose up --build -d`), run the end-to-end check against
-real OpenAI embeddings and Claude:
-
-```bash
-uv run python scripts/smoke_test.py                  # local
-uv run python scripts/smoke_test.py https://<url>    # a deployed instance
-```
-
-
-### Deploy
-
-Google Cloud Run + Neon Postgres, with per-IP rate limits and a global daily LLM budget.
-Step-by-step guide: [docs/DEPLOY.md](docs/DEPLOY.md).
-
-### Evaluation
-
-A 33-question golden set (answerable, multi-source, unanswerable, off-topic) is run against a
-live instance over HTTP and scored for retrieval, refusals, citations and, with `--judge`, claim
-support and answer correctness (LLM judge with stated reasons).
-
-```bash
-uv run python -m evals.run https://<url> --judge --label my-run     # writes docs/evals/
-uv run python -m evals.run --from-json docs/evals/<run>.json --judge  # re-judge a saved run
-```
-
-**Results** (live demo, 2026-10-12, Claude Sonnet 5.5, judged by Claude Haiku 5.5). Same 33
-questions, before and after hybrid retrieval:
-
-| What | Vector only ([v1](docs/evals/2026-10-12-v1.md)) | Hybrid ([v2](docs/evals/2026-10-12-v2-hybrid.md)) |
-|---|---|---|
-| Answerable questions answered (not refused) | 22 / 24 | **24 / 24** |
-| Answers correct vs hand-written reference (LLM judge) | 22 / 22 | **24 / 24** |
-| Right page retrieved: top 3 / top 6 | 88% / 92% | **100% / 100%** |
-| Retrieval MRR | 0.81 | **0.88** |
-| Unanswerable on-topic questions: no unsupported answer | 6 / 6 | 6 / 6 |
-| Off-topic questions refused before any LLM call | 3 / 3 | 3 / 3 |
-| Shown claims fully supported by their quotes (LLM judge) | 72 / 78 | 81 / 86 |
-| Shown claims NOT supported by their quotes | 0 | 0 |
-| Answered questions citing an expected page | 22 / 22 | 24 / 24 |
-| Latency p50 / p95 (LLM answers) | 2.9s / 6.5s | 3.4s / 7.1s |
-
-What the numbers say:
-- Vector search missed two pages that keyword search finds by exact terms ("residual risk",
-  "eliminate negative risk entirely"). Hybrid retrieval (vector + IDF-weighted keyword search,
-  merged with Reciprocal Rank Fusion) fixed both with no regressions, so it is now the default.
-- Every "partially supported" claim was checked by hand: the extra detail came from the source
-  document but outside the quoted span, or was attribution wording ("MANAGE 1.3 states...").
-  No fabricated fact was found.
-- With hybrid, one unanswerable question ("What penalties does NIST impose?") got a `partial`
-  answer: the one supported fact that the framework is voluntary, plus a notice that the
-  documents only partly answer. No penalty was invented.
-- The baseline run ([report](docs/evals/2026-10-12-baseline.md)) caught a real bug: claim-format
-  answers hit the 1024-token output cap and returned 502. Fixed (2048 cap, at most 8 claims).
-- Small sample (33 questions): one question is about 4 points, and the keyword method was
-  chosen after seeing these questions' failures. Treat this as a regression check, not a
-  benchmark; a held-out question set is the next step for an unbiased number.
-
-### Privacy and data retention
-
-The demo stores each question's raw text in the `query_logs` table (for debugging and evals),
-with no automatic expiry; deleting a collection deletes its logs. Answers are not stored, and
-application logs never contain question or answer text. Don't ask the public demo anything
-personal. Details: "Data retention" in [docs/DESIGN.md](docs/DESIGN.md).
-
-### Tests
+<details>
+<summary><b>Tests and smoke test</b></summary>
 
 ```bash
 uv run pytest                           # all tests (integration tests skip if the DB is down)
 uv run pytest -m "not integration"      # unit tests only, no database needed
 ```
 
-Integration tests run against a real PostgreSQL + pgvector database. They verify that migrations
-apply and roll back cleanly, that the ORM models match the migrated schema, and that Postgres
-enforces the constraints (deduplication, cascading deletes, valid statuses).
+Integration tests run against a real PostgreSQL + pgvector database with fake embeddings and a
+fake LLM. They cover migrations (apply and roll back), constraints (deduplication, cascading
+deletes), retrieval, the full query pipeline, and budget concurrency.
 
-### Database migrations
+The smoke test runs end to end against real OpenAI embeddings and Claude:
 
 ```bash
-uv run alembic revision --autogenerate -m "describe change"   # then REVIEW the generated file
-uv run alembic upgrade head
+uv run python scripts/smoke_test.py                  # local
+uv run python scripts/smoke_test.py https://<url>    # a deployed instance
 ```
+
+</details>
+
+<details>
+<summary><b>Deploy</b></summary>
+
+Google Cloud Run + Neon Postgres, with per-IP rate limits and a global daily LLM budget.
+Step-by-step guide, including safe secret rotation: [docs/DEPLOY.md](docs/DEPLOY.md).
+
+</details>
+
+## Evaluation
+
+```bash
+uv run python -m evals.run https://<url> --judge --label my-run       # writes docs/evals/
+uv run python -m evals.run --from-json docs/evals/<run>.json --judge  # re-judge a saved run
+```
+
+The harness calls the public HTTP API exactly like a user, so it measures the deployed system.
+Golden set: 24 answerable (single- and multi-source), 6 unanswerable but on-topic, 3 off-topic.
+Errors count as failures, and collected answers are saved before judging so a judge failure
+loses nothing.
+
+What the runs showed:
+- **The baseline caught a real bug:** claim-format answers hit the 1024-token output cap and
+  returned 502 ([report](docs/evals/2026-10-12-baseline.md)). Fixed with a 2048 cap and at most
+  8 claims per answer.
+- **Both false refusals were retrieval misses**, not model errors: vector search ranked pages with
+  the exact terms ("residual risk", "eliminate negative risk entirely") below the top 6. Hybrid
+  retrieval fixed both.
+- **The gate threshold has margin:** off-topic questions scored at most 0.14, answerable ones at
+  least 0.31; 0.20 sits between them.
+- **"Partially supported" claims were checked by hand:** the extra detail came from the source
+  document but outside the quoted span, or was attribution wording ("MANAGE 1.3 states...").
+  No fabricated fact was found.
+- **One unanswerable question got a `partial` answer** with hybrid ("What penalties does NIST
+  impose?"): the supported fact that the framework is voluntary, plus a notice that the documents
+  only partly answer. No penalty was invented.
+
+## Limitations
+
+- Quote verification proves a quote exists, not that the claim is entailed by it. The LLM judge
+  measures this; it found no unsupported claims, but it is a model, not a proof.
+- 33 questions is small (one question is about 4 points), and there is no held-out set yet.
+- Single-turn Q&A only. No conversation memory, no streaming (answers take 3 to 7 seconds).
+- One admin key for writes; no user accounts or per-user collections.
+- No OCR: scanned PDFs are rejected. PDF line-break repair is a heuristic and can join a real
+  compound word (for example "cost-effective") when the document gives no evidence either way.
+- English stemming for keyword search.
+
+## Privacy and data retention
+
+The demo stores each question's raw text in the `query_logs` table (for debugging and evals), with
+no automatic expiry; deleting a collection deletes its logs. Answers are not stored, and
+application logs never contain question or answer text. Don't ask the public demo anything
+personal. Details: "Data retention" in [docs/DESIGN.md](docs/DESIGN.md).
+
+## Roadmap
+
+- [x] M0-M2: Scaffold, CI, schema and migrations, document ingestion
+- [x] M3-M4: Vector search; cited answers with verification and refusals
+- [x] M5-M6: Web UI; deploy (Cloud Run + Neon, rate limits, daily LLM budget)
+- [x] M6.1: Claim-level verification, atomic budget
+- [x] M7: Evaluation harness and golden set
+- [x] M8: Hybrid retrieval (won the eval, now the default)
+- [x] M10: Docs, PDF text repair, demo
+- [ ] Held-out question set for an unbiased estimate
+- [ ] Streaming (deferred: polish, not core value)
 
 ## License
 
