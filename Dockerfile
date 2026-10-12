@@ -39,7 +39,14 @@ COPY --chown=app:app migrations ./migrations
 
 ENV PATH="/app/.venv/bin:$PATH" \
     PYTHONUNBUFFERED=1 \
-    PORT=8000
+    PORT=8000 \
+    TIKTOKEN_CACHE_DIR=/app/.tiktoken
+
+# tiktoken downloads its tokenizer file on first use. Fetch it at build time so
+# the running container never needs that download (faster cold starts, and
+# no runtime dependency on an external file host).
+RUN python -c "import tiktoken; tiktoken.get_encoding('cl100k_base')" \
+    && chown -R app:app /app/.tiktoken
 
 # Never run as root: if the app is compromised, the attacker isn't root.
 USER app
