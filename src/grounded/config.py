@@ -19,6 +19,9 @@ class Settings(BaseSettings):
         env_file=".env",
         env_file_encoding="utf-8",
         extra="ignore",  # .env holds vars for later milestones; don't reject them
+        # Secrets piped into a secret manager often gain a trailing newline,
+        # which silently breaks API keys. Strip surrounding whitespace everywhere.
+        str_strip_whitespace=True,
     )
 
     # ----- App -----
@@ -63,6 +66,19 @@ class Settings(BaseSettings):
     max_upload_mb: int = Field(default=10, ge=1, le=100)
     max_pdf_pages: int = Field(default=500, ge=1)
 
+    # ----- Abuse / cost protection (public demo) -----
+    # Per client IP, per app instance (in-memory sliding window).
+    rate_limit_query_per_minute: int = Field(default=10, ge=1, le=10_000)
+    rate_limit_search_per_minute: int = Field(default=30, ge=1, le=10_000)
+    # Global cap on LLM calls per rolling 24h, counted in the database so it
+    # holds across all instances. Worst-case daily spend is bounded by this.
+    daily_llm_query_limit: int = Field(default=300, ge=1)
+    # How many proxies in front of the app append to X-Forwarded-For.
+    # 0 = trust nothing, use the TCP peer (local / docker compose).
+    # 1 = Cloud Run: use the LAST X-Forwarded-For entry (added by Google's front end).
+    # Never use the FIRST entry: clients can put anything there.
+    trusted_proxy_hops: int = Field(default=0, ge=0, le=5)
+
     # ----- Retrieval -----
     retrieval_top_k: int = Field(default=6, ge=1, le=20)
     # HNSW search breadth: higher = better recall, slower. pgvector's default is 40.
@@ -70,12 +86,29 @@ class Settings(BaseSettings):
 
     @field_validator("database_url")
     @classmethod
-    def require_async_driver(cls, value: str) -> str:
-        if not value.startswith("postgresql+asyncpg://"):
+    def normalize_database_url(cls, value: str) -> str:
+        """Accept the connection string Postgres hosts (e.g. Neon) give you, as-is.
+
+        - postgres:// or postgresql://  ->  postgresql+asyncpg://  (async driver)
+        - sslmode=require  ->  ssl=require  (asyncpg's spelling)
+        - channel_binding=...  dropped (libpq-only option asyncpg doesn't accept)
+        """
+        scheme, sep, rest = value.partition("://")
+        if not sep or scheme not in ("postgres", "postgresql", "postgresql+asyncpg"):
+            raise ValueError("DATABASE_URL must be a PostgreSQL URL (postgresql://...)")
+        base, _, query = rest.partition("?")
+        params = []
+        for param in filter(None, query.split("&")):
+            key, _, val = param.partition("=")
+            if key == "channel_binding":
+                continue
+            params.append(f"ssl={val}" if key == "sslmode" else param)
+        if "-pooler." in base:
             raise ValueError(
-                "DATABASE_URL must start with 'postgresql+asyncpg://' (async driver required)"
+                "DATABASE_URL points at a connection pooler (PgBouncer). asyncpg's prepared "
+                "statements break in transaction pooling mode: use the direct connection string."
             )
-        return value
+        return f"postgresql+asyncpg://{base}" + (f"?{'&'.join(params)}" if params else "")
 
     @field_validator("admin_api_key", "openai_api_key", "anthropic_api_key", mode="before")
     @classmethod

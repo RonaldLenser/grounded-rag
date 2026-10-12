@@ -6,6 +6,7 @@ Keeping queries in one place means one file to review for performance
 
 import uuid
 from collections.abc import Sequence
+from datetime import datetime
 
 from sqlalchemy import func, select, text
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -138,3 +139,13 @@ async def add_query_log(
     session.add(log)
     await session.flush()
     return log
+
+
+async def count_llm_queries_since(session: AsyncSession, since: datetime) -> int:
+    """LLM calls (rows with a model) across ALL collections since `since`."""
+    count = await session.scalar(
+        select(func.count(QueryLog.id)).where(
+            QueryLog.model.is_not(None), QueryLog.created_at >= since
+        )
+    )
+    return count or 0

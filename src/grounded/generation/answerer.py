@@ -11,6 +11,7 @@ The hallucination defenses, in order:
 import time
 import uuid
 from dataclasses import dataclass
+from datetime import UTC, datetime, timedelta
 
 import structlog
 from pydantic import ValidationError
@@ -18,7 +19,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from grounded.config import Settings
 from grounded.db import repositories
-from grounded.errors import LLMProviderError
+from grounded.errors import DailyLimitError, LLMProviderError
 from grounded.generation.citations import VerificationResult, verify_answer
 from grounded.generation.prompts import (
     ANSWER_SCHEMA,
@@ -76,6 +77,7 @@ class Answerer:
             )
             llm_called = False
         else:
+            await self._enforce_daily_budget()
             sources = select_sources(chunks, self._settings.max_context_tokens)
             completion = await self._llm.complete_structured(
                 system=SYSTEM_PROMPT,
@@ -133,3 +135,17 @@ class Answerer:
             output_tokens=output_tokens,
             latency_ms=latency_ms,
         )
+
+    async def _enforce_daily_budget(self) -> None:
+        """Global cost ceiling: at most N LLM calls per rolling 24 hours.
+
+        Counted in the database (query_logs), so it is exact across every app
+        instance. Refusals at the relevance gate don't count: they cost nothing.
+        """
+        since = datetime.now(UTC) - timedelta(days=1)
+        used = await repositories.count_llm_queries_since(self._session, since)
+        if used >= self._settings.daily_llm_query_limit:
+            logger.warning("daily_llm_limit_reached", used=used)
+            raise DailyLimitError(
+                "This demo has reached its daily question limit. Please try again tomorrow."
+            )

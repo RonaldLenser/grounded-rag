@@ -15,6 +15,7 @@ class AppError(Exception):
     def __init__(self, message: str) -> None:
         super().__init__(message)
         self.message = message
+        self.headers: dict[str, str] = {}
 
 
 class NotFoundError(AppError):
@@ -79,3 +80,21 @@ class LLMProviderError(AppError):
 
     status_code = 502
     code = "llm_provider_error"
+
+
+class RateLimitedError(AppError):
+    """Too many requests from one client. Retry-After tells them when to retry."""
+
+    status_code = 429
+    code = "rate_limited"
+
+    def __init__(self, retry_after_seconds: int) -> None:
+        super().__init__(f"Too many requests. Try again in {retry_after_seconds} seconds.")
+        self.headers = {"Retry-After": str(retry_after_seconds)}
+
+
+class DailyLimitError(AppError):
+    """The demo's global daily LLM budget is used up."""
+
+    status_code = 429
+    code = "daily_limit_reached"

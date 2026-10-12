@@ -23,9 +23,41 @@ def test_local_env_uses_human_readable_logs() -> None:
     assert Settings(database_url=VALID_URL, app_env="local").json_logs is False
 
 
-def test_sync_driver_url_is_rejected() -> None:
-    with pytest.raises(ValidationError, match="postgresql\\+asyncpg://"):
-        Settings(database_url="postgresql://u:p@localhost:5432/db")
+def test_neon_style_url_is_normalized_for_asyncpg() -> None:
+    raw = "postgresql://u:p@ep-cool-1.us-east-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require"
+
+    settings = Settings(database_url=raw)
+
+    assert settings.database_url == (
+        "postgresql+asyncpg://u:p@ep-cool-1.us-east-1.aws.neon.tech/neondb?ssl=require"
+    )
+
+
+def test_postgres_scheme_alias_is_accepted() -> None:
+    assert Settings(database_url="postgres://u:p@h/db").database_url == (
+        "postgresql+asyncpg://u:p@h/db"
+    )
+
+
+def test_non_postgres_url_is_rejected() -> None:
+    with pytest.raises(ValidationError, match="PostgreSQL URL"):
+        Settings(database_url="mysql://u:p@localhost/db")
+
+
+def test_pooler_endpoint_is_rejected_with_a_clear_message() -> None:
+    with pytest.raises(ValidationError, match="direct connection string"):
+        Settings(database_url="postgresql://u:p@ep-x-pooler.us-east-1.aws.neon.tech/db")
+
+
+def test_secrets_with_trailing_newlines_are_stripped() -> None:
+    settings = Settings(
+        database_url=VALID_URL + "\r\n",
+        openai_api_key="sk-abc\r\n",  # type: ignore[arg-type]
+    )
+
+    assert settings.database_url == VALID_URL
+    assert settings.openai_api_key is not None
+    assert settings.openai_api_key.get_secret_value() == "sk-abc"
 
 
 def test_missing_database_url_fails_fast(monkeypatch: pytest.MonkeyPatch) -> None:

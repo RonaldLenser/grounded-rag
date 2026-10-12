@@ -1,7 +1,7 @@
-# syntax=docker/dockerfile:1
-
 # ---------- Stage 1: builder ----------
 # Has uv and build tooling. Installs dependencies into /app/.venv.
+# Plain Dockerfile syntax only (no BuildKit-only features), so it builds the
+# same everywhere: Docker Desktop, GitHub Actions, and Google Cloud Build.
 FROM python:3.12-slim-trixie AS builder
 
 COPY --from=ghcr.io/astral-sh/uv:0.13.0 /uv /bin/uv
@@ -12,18 +12,15 @@ ENV UV_COMPILE_BYTECODE=1 \
 
 WORKDIR /app
 
-# Dependencies first, in their own layer: this layer is reused from cache
+# Dependencies first, in their own layer: Docker reuses this layer from cache
 # until pyproject.toml or uv.lock change, so code edits rebuild in seconds.
-RUN --mount=type=cache,target=/root/.cache/uv \
-    --mount=type=bind,source=uv.lock,target=uv.lock \
-    --mount=type=bind,source=pyproject.toml,target=pyproject.toml \
-    uv sync --locked --no-install-project --no-dev
+COPY pyproject.toml uv.lock ./
+RUN uv sync --locked --no-install-project --no-dev
 
 # Then our own code.
-COPY pyproject.toml uv.lock README.md ./
+COPY README.md ./
 COPY src ./src
-RUN --mount=type=cache,target=/root/.cache/uv \
-    uv sync --locked --no-dev --no-editable
+RUN uv sync --locked --no-dev --no-editable
 
 # ---------- Stage 2: runtime ----------
 # Only Python + the finished venv. No uv, no build tools, no source tree:
@@ -54,4 +51,6 @@ EXPOSE 8000
 
 # Shell form so $PORT expands (Cloud Run sets PORT=8080). `exec` makes uvicorn
 # PID 1, so it receives shutdown signals and stops gracefully.
-CMD ["sh", "-c", "exec uvicorn grounded.main:create_app --factory --host 0.0.0.0 --port ${PORT} --no-access-log --proxy-headers"]
+# --no-proxy-headers: the app decides the client IP itself (TRUSTED_PROXY_HOPS);
+# uvicorn rewriting it from X-Forwarded-For too would let clients spoof it.
+CMD ["sh", "-c", "exec uvicorn grounded.main:create_app --factory --host 0.0.0.0 --port ${PORT} --no-access-log --no-proxy-headers"]
