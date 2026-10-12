@@ -6,6 +6,22 @@ PostgreSQL with pgvector, `aws-us-east-1`, Virginia). Same region family = low l
 Commands below are PowerShell (Windows). Secrets are typed at a hidden prompt and go straight
 into Google Secret Manager: they are never written to files, logs, or shell history.
 
+## 0. Hidden prompt helper (paste once per PowerShell window)
+
+Never paste a secret onto the command line, and never use plain `Read-Host`: it **echoes**
+what you paste, so the secret ends up on screen (and in any screenshot). Use this instead:
+
+```powershell
+function Read-Secret([string]$Prompt) {
+    $secure = Read-Host -AsSecureString $Prompt          # shows **** while you paste
+    $bstr = [Runtime.InteropServices.Marshal]::SecureStringToBSTR($secure)
+    try { [Runtime.InteropServices.Marshal]::PtrToStringBSTR($bstr) }
+    finally { [Runtime.InteropServices.Marshal]::ZeroFreeBSTR($bstr) }
+}
+```
+
+Functions don't survive closing the window: paste it again in each new window.
+
 ## Architecture
 
 ```
@@ -41,7 +57,7 @@ near $0 for a demo. Each answered question is roughly $0.003-0.01 of Claude usag
 4. Create the schema from your machine (session-only variable, gone when the window closes):
 
 ```powershell
-$env:DATABASE_URL = Read-Host "Paste Neon connection string"
+$env:DATABASE_URL = Read-Secret "Paste Neon connection string"
 uv run alembic upgrade head
 Remove-Item Env:DATABASE_URL
 ```
@@ -80,10 +96,7 @@ revoked without taking the demo down.
 
 ```powershell
 function New-GroundedSecret([string]$Name) {
-    $secure = Read-Host -AsSecureString "Paste value for $Name"
-    $bstr = [Runtime.InteropServices.Marshal]::SecureStringToBSTR($secure)
-    try { [Runtime.InteropServices.Marshal]::PtrToStringBSTR($bstr) | gcloud secrets create $Name --data-file=- }
-    finally { [Runtime.InteropServices.Marshal]::ZeroFreeBSTR($bstr) }
+    Read-Secret "Paste value for $Name" | gcloud secrets create $Name --data-file=-
 }
 
 New-GroundedSecret DATABASE_URL        # the Neon string from step 1
@@ -95,9 +108,28 @@ New-GroundedSecret ADMIN_API_KEY       # the NEW production admin key
 (PowerShell adds a trailing newline when piping; the app strips surrounding whitespace from
 all settings, so that can't corrupt a key.)
 
-To rotate a secret later: `... | gcloud secrets versions add NAME --data-file=-`, then redeploy.
+### Rotating a secret (e.g. after a leak)
+
+1. Create the new value at the source first (Neon: Roles -> Reset password; OpenAI/Anthropic:
+   new key). The old value must stop working, or rotation achieved nothing.
+2. Store it and restart the app on it (no rebuild needed):
+
+```powershell
+Read-Secret "Paste NEW value for DATABASE_URL" | gcloud secrets versions add DATABASE_URL --data-file=-
+gcloud run services update grounded --region us-east4 --update-secrets DATABASE_URL=DATABASE_URL:latest
+```
+
+3. Check the app: `https://<service-url>/ready` must return `{"status":"ready"}`.
+4. Only then disable the old version(s): `gcloud secrets versions list DATABASE_URL`, then
+   `gcloud secrets versions disable <N> --secret=DATABASE_URL`.
+
+Disabling before step 3 can take the site down if the new value is wrong.
 
 ## 4. Deploy (repeat for every release)
+
+If the release adds a database migration, run it against Neon **first** (step 1.4 command).
+Migrations are additive, so the running version keeps working with the new schema, while the
+new version would fail without it.
 
 From the repo root, on an up-to-date `main`:
 
@@ -119,7 +151,7 @@ gcloud run deploy grounded --source . --region us-east4 --allow-unauthenticated 
 
 ```powershell
 $url = "https://grounded-<hash>.us-east4.run.app"     # from the deploy output
-$env:ADMIN_API_KEY = Read-Host "Production admin key"
+$env:ADMIN_API_KEY = Read-Secret "Production admin key"
 uv run python scripts/seed_demo.py $url
 uv run python scripts/smoke_test.py $url --check-rate-limit
 Remove-Item Env:ADMIN_API_KEY
