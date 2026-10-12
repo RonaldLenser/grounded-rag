@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Grounded</title>
+    <meta name="description" content="Answers questions only from your documents, with verified citations." />
+    <link rel="stylesheet" href="/static/styles.css" />
+    <script src="/static/app.js" defer></script>
+  </head>
+  <body>
+    <header class="topbar">
+      <div class="brand">
+        <h1>Grounded</h1>
+        <p>Answers only from your documents. Every citation verified.</p>
+      </div>
+      <nav class="topbar-links">
+        <a href="/docs">API docs</a>
+        <a href="https://github.com/RonaldLenser/grounded-rag">GitHub</a>
+      </nav>
+    </header>
+
+    <main class="layout">
+      <aside class="panel sidebar" aria-label="Documents">
+        <section class="block">
+          <label for="collection">Collection</label>
+          <select id="collection"></select>
+          <p id="collection-empty" class="hint" hidden>No collections yet. Create one below.</p>
+        </section>
+
+        <section class="block">
+          <h2>Documents</h2>
+          <ul id="documents" class="doc-list"></ul>
+          <p id="documents-empty" class="hint" hidden>No documents in this collection.</p>
+        </section>
+
+        <details class="block admin" id="admin">
+          <summary>Admin: upload &amp; manage</summary>
+          <label for="admin-key">Admin key</label>
+          <input id="admin-key" type="password" autocomplete="off" placeholder="X-API-Key" />
+          <p class="hint">Kept only in this browser tab.</p>
+
+          <form id="upload-form">
+            <label for="file">Upload PDF, .md or .txt</label>
+            <input id="file" type="file" accept=".pdf,.md,.markdown,.txt" required />
+            <button type="submit">Upload</button>
+          </form>
+
+          <form id="collection-form">
+            <label for="collection-name">New collection</label>
+            <input id="collection-name" type="text" maxlength="100" placeholder="e.g. company-policies" required />
+            <button type="submit">Create</button>
+          </form>
+          <p id="admin-status" class="status" role="status"></p>
+        </details>
+      </aside>
+
+      <section class="panel main" aria-label="Ask">
+        <form id="ask-form" class="ask">
+          <label for="question" class="visually-hidden">Question</label>
+          <textarea id="question" rows="2" maxlength="1000" placeholder="Ask a question about your documents..." required></textarea>
+          <button type="submit" id="ask-button">Ask</button>
+        </form>
+
+        <div id="result" hidden>
+          <div class="result-head">
+            <span id="status-badge" class="badge"></span>
+            <span id="downgrade-note" class="hint" hidden></span>
+          </div>
+          <p id="answer" class="answer"></p>
+          <ol id="citations" class="citations"></ol>
+          <p id="meta" class="meta"></p>
+        </div>
+
+        <p id="ask-error" class="error" role="alert" hidden></p>
+
+        <div id="intro" class="intro">
+          <h2>How it works</h2>
+          <ol>
+            <li>Your question is matched against document chunks (vector search).</li>
+            <li>If nothing is relevant enough, it says so, without calling the AI.</li>
+            <li>Otherwise Claude answers from those chunks only, citing exact quotes.</li>
+            <li>Every quote is checked against the source in code. Fake citations are dropped.</li>
+          </ol>
+        </div>
+      </section>
+    </main>
+  </body>
+</html>
