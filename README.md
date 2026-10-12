@@ -40,7 +40,7 @@ FastAPI · PostgreSQL + pgvector · SQLAlchemy 2.0 (async) + Alembic · Claude (
 - [x] M4: Cited answers with citation verification and refusals
 - [x] M5: Web UI
 - [x] M6: Deploy (Cloud Run + Neon, rate limits, daily LLM budget)
-- [ ] M7: Evaluation harness
+- [ ] M7: Evaluation harness (harness + baseline done; judged results next)
 - [ ] M8: Hybrid retrieval
 - [ ] M9: Streaming
 - [ ] M10: Docs and demo
@@ -115,6 +115,20 @@ uv run python scripts/smoke_test.py https://<url>    # a deployed instance
 
 Google Cloud Run + Neon Postgres, with per-IP rate limits and a global daily LLM budget.
 Step-by-step guide: [docs/DEPLOY.md](docs/DEPLOY.md).
+
+### Evaluation
+
+A 33-question golden set (answerable, multi-source, unanswerable, off-topic) is run against a
+live instance over HTTP and scored for retrieval, refusals, citations and, with `--judge`, claim
+support and answer correctness (LLM judge with stated reasons).
+
+```bash
+uv run python -m evals.run https://<url> --judge --label my-run     # writes docs/evals/
+uv run python -m evals.run --from-json docs/evals/<run>.json --judge  # re-judge a saved run
+```
+
+Reports: [docs/evals/](docs/evals/). The first run found a real bug (answers cut off at the
+output token cap) and showed every false refusal was a retrieval miss.
 
 ### Privacy and data retention
 

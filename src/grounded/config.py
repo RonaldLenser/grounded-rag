@@ -54,7 +54,10 @@ class Settings(BaseSettings):
     # ----- Generation (answers) -----
     anthropic_api_key: SecretStr | None = None
     llm_model: str = "claude-sonnet-5-5"
-    llm_max_tokens: int = Field(default=1024, ge=64, le=8192)
+    # Claim-by-claim JSON (each with quotes) is wordier than prose: list answers
+    # reached ~950 tokens in the M7 eval and one hit 1024 (cut off -> 502).
+    # Billing is per token generated, so a higher cap only costs when used.
+    llm_max_tokens: int = Field(default=2048, ge=64, le=8192)
     llm_timeout_seconds: float = Field(default=60.0, gt=0)
     llm_max_retries: int = Field(default=2, ge=0, le=10)
     # Below this best-match similarity we refuse WITHOUT calling the LLM.
