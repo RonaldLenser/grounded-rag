@@ -89,8 +89,10 @@ class Settings(BaseSettings):
 
     # ----- Retrieval -----
     # vector: embeddings only. hybrid: embeddings + IDF-weighted keyword search,
-    # merged with Reciprocal Rank Fusion. Chosen by the eval (docs/evals/).
-    retrieval_strategy: Literal["vector", "hybrid"] = "vector"
+    # merged with Reciprocal Rank Fusion. Hybrid is the default because it won the
+    # eval: right page in the top 6 for 24/24 answerable questions vs 22/24, and no
+    # false refusals (docs/evals/2026-10-12-v2-hybrid.md vs -v1.md).
+    retrieval_strategy: Literal["vector", "hybrid"] = "hybrid"
     retrieval_top_k: int = Field(default=6, ge=1, le=20)
     # Hybrid: how many candidates each method contributes before fusion.
     hybrid_candidates: int = Field(default=20, ge=1, le=100)
