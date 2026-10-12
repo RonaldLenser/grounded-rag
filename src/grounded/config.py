@@ -22,6 +22,9 @@ class Settings(BaseSettings):
         # Secrets piped into a secret manager often gain a trailing newline,
         # which silently breaks API keys. Strip surrounding whitespace everywhere.
         str_strip_whitespace=True,
+        # Validation errors must never echo the rejected value: DATABASE_URL and
+        # API keys contain credentials, and errors end up in terminals and logs.
+        hide_input_in_errors=True,
     )
 
     # ----- App -----
