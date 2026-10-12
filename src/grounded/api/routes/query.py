@@ -9,6 +9,7 @@ from grounded.api.rate_limit import rate_limit
 from grounded.schemas.collections import ErrorResponse
 from grounded.schemas.query import (
     Citation,
+    Claim,
     QueryRequest,
     QueryResponse,
     RetrievalInfo,
@@ -34,6 +35,8 @@ async def query(
         query_id=result.query_id,
         status=verification.status,
         answer=verification.answer,
+        notice=verification.notice,
+        claims=[Claim(text=c.text, source_ids=c.source_ids) for c in verification.claims],
         citations=[
             Citation(
                 source_id=c.source.source_id,
@@ -52,8 +55,10 @@ async def query(
             top_score=result.retrieved[0].score if result.retrieved else None,
         ),
         verification=VerificationInfo(
+            claims_supported=len(verification.claims),
+            claims_rejected=len(verification.rejected_claims),
             citations_verified=len(verification.verified),
-            citations_rejected=len(verification.rejected),
+            citations_rejected=len(verification.rejected_evidence),
             downgraded_from=verification.downgraded_from,
         ),
         usage=Usage(

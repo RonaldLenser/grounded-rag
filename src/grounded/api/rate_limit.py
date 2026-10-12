@@ -10,8 +10,8 @@ timestamps fall inside the last `window` seconds.
 Tradeoffs, stated honestly:
 - In memory, per instance: with N Cloud Run instances a client could get up
   to N x limit. Fine for a demo with max 2 instances; a shared store (Redis)
-  would make it exact. The global DAILY cap (answerer.py) is DB-backed and
-  exact, so total spend stays bounded regardless.
+  would make it exact. The global DAILY cap (answerer.py) is reserved
+  atomically in Postgres, so total LLM calls stay bounded regardless.
 - Keyed by client IP. Behind Cloud Run's proxy the TCP peer is Google's front
   end, so the real client IP comes from X-Forwarded-For, read in a way clients
   can't spoof (see client_key and the TRUSTED_PROXY_HOPS setting).

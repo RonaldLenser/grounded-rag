@@ -6,12 +6,13 @@ Keeping queries in one place means one file to review for performance
 
 import uuid
 from collections.abc import Sequence
-from datetime import datetime
+from datetime import date
 
 from sqlalchemy import func, select, text
+from sqlalchemy.dialects.postgresql import insert as pg_insert
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from grounded.db.models import Chunk, Collection, Document, QueryLog
+from grounded.db.models import Chunk, Collection, Document, LLMDailyUsage, QueryLog
 
 
 # ----- Collections -----
@@ -109,6 +110,9 @@ async def search_chunks_by_vector(
         select(Chunk, Document.filename, (1 - distance).label("similarity"))
         .join(Document, Document.id == Chunk.document_id)
         .where(Document.collection_id == collection_id)
+        # Only answer from fully ingested documents. Ingestion is atomic today, so
+        # non-ready chunks shouldn't exist; this keeps it true if that ever changes.
+        .where(Document.status == "ready")
         # ORDER BY distance + LIMIT is the exact shape that lets Postgres use the HNSW index.
         .order_by(distance)
         .limit(top_k)
@@ -117,7 +121,7 @@ async def search_chunks_by_vector(
     return [(chunk, filename, float(similarity)) for chunk, filename, similarity in rows]
 
 
-# ----- Query logs -----
+# ----- Query logs and LLM budget -----
 async def add_query_log(
     session: AsyncSession,
     *,
@@ -147,11 +151,28 @@ async def add_query_log(
     return log
 
 
-async def count_llm_queries_since(session: AsyncSession, since: datetime) -> int:
-    """LLM calls (rows with a model) across ALL collections since `since`."""
-    count = await session.scalar(
-        select(func.count(QueryLog.id)).where(
-            QueryLog.model.is_not(None), QueryLog.created_at >= since
+async def reserve_llm_call(session: AsyncSession, day: date, limit: int) -> bool:
+    """Atomically claim one LLM call from `day`'s budget. False = budget used up.
+
+    One statement, no read-then-write race:
+      INSERT (day, 1) ... ON CONFLICT (day)
+      DO UPDATE SET calls = calls + 1 WHERE calls < limit
+      RETURNING calls
+    Postgres row-locks the day's counter while it checks and increments, so two
+    concurrent requests can't both take the last slot. When the WHERE fails, no
+    row is returned and nothing changes.
+
+    The caller must COMMIT right away (before the slow LLM call) so the row lock
+    is held for milliseconds, not seconds.
+    """
+    statement = (
+        pg_insert(LLMDailyUsage)
+        .values(day=day, calls=1)
+        .on_conflict_do_update(
+            index_elements=[LLMDailyUsage.day],
+            set_={"calls": LLMDailyUsage.calls + 1, "updated_at": func.now()},
+            where=LLMDailyUsage.calls < limit,
         )
+        .returning(LLMDailyUsage.calls)
     )
-    return count or 0
+    return await session.scalar(statement) is not None

@@ -1,22 +1,24 @@
 """Database tables, defined as typed SQLAlchemy models.
 
-Four tables:
-  collections  a named group of documents (e.g. the demo corpus vs. eval corpus)
-  documents    one uploaded file and its processing status
-  chunks       a piece of a document's text plus its embedding vector
-  query_logs   one row per question asked (for debugging, cost, and evals)
+Five tables:
+  collections      a named group of documents (e.g. the demo corpus vs. eval corpus)
+  documents        one uploaded file and its processing status
+  chunks           a piece of a document's text plus its embedding vector
+  query_logs       one row per question asked (for debugging, cost, and evals)
+  llm_daily_usage  one counter row per UTC day: the global LLM call budget
 
 The schema itself is created by Alembic migrations (migrations/versions/),
 not by these classes. A test checks that the two never drift apart.
 """
 
 import uuid
-from datetime import datetime
+from datetime import date, datetime
 
 from pgvector.sqlalchemy import Vector
 from sqlalchemy import (
     CheckConstraint,
     Computed,
+    Date,
     DateTime,
     Float,
     ForeignKey,
@@ -154,6 +156,8 @@ class QueryLog(Base):
     collection_id: Mapped[uuid.UUID] = mapped_column(
         ForeignKey("collections.id", ondelete="CASCADE"), nullable=False, index=True
     )
+    # Raw question text, kept for debugging and evals. Retained until its
+    # collection is deleted (no automatic expiry). See "Data retention" in DESIGN.md.
     question: Mapped[str] = mapped_column(Text, nullable=False)
     status: Mapped[str] = mapped_column(String(32), nullable=False)
     retrieved_chunk_ids: Mapped[list[uuid.UUID]] = mapped_column(
@@ -168,3 +172,21 @@ class QueryLog(Base):
     output_tokens: Mapped[int | None] = mapped_column(Integer)
     latency_ms: Mapped[int] = mapped_column(Integer, nullable=False)
     created_at: Mapped[datetime] = _created_at()
+
+
+class LLMDailyUsage(Base):
+    """Global LLM budget: calls reserved per UTC day, across every app instance.
+
+    A row is incremented atomically BEFORE each LLM call (see
+    repositories.reserve_llm_call), so concurrent requests can't overshoot the
+    limit and failed calls still count.
+    """
+
+    __tablename__ = "llm_daily_usage"
+    __table_args__ = (CheckConstraint("calls >= 0", name="calls_non_negative"),)
+
+    day: Mapped[date] = mapped_column(Date, primary_key=True)
+    calls: Mapped[int] = mapped_column(Integer, nullable=False, server_default=text("0"))
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), nullable=False
+    )

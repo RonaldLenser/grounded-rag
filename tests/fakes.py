@@ -90,9 +90,10 @@ class FakeLLM:
     """Offline stand-in for Claude.
 
     By default it behaves like a well-behaved model: it reads the sources in the
-    prompt, answers from S1, and quotes S1's first sentence exactly. Tests can
-    instead script an exact response (`respond_with`) to simulate bad behavior:
-    invented sources, invented quotes, refusals, malformed JSON.
+    prompt and returns one claim (S1's first sentence) with that sentence as its
+    exact quote. Tests can instead script an exact response (`respond_with`) to
+    simulate bad behavior: invented sources, invented quotes, unsupported claims,
+    refusals, malformed JSON.
     """
 
     def __init__(self) -> None:
@@ -117,11 +118,15 @@ class FakeLLM:
     def _grounded(user: str) -> dict[str, Any]:
         match = _SOURCE_BLOCK.search(user)
         if match is None:
-            return {"status": "insufficient_context", "answer": "No sources.", "citations": []}
+            return {"status": "insufficient_context", "claims": []}
         content = html.unescape(match.group("content"))
         first_sentence = content.split(". ")[0].split("\n")[-1].strip()
         return {
             "status": "answered",
-            "answer": f"According to the documents, {first_sentence} [S1]",
-            "citations": [{"source_id": "S1", "quote": first_sentence}],
+            "claims": [
+                {
+                    "text": f"{first_sentence}.",
+                    "evidence": [{"source_id": "S1", "quote": first_sentence}],
+                }
+            ],
         }
