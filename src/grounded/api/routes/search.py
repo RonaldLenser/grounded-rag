@@ -29,5 +29,6 @@ async def search(
     results = await retriever.search(collection_id, body.query, top_k=body.top_k)
     return SearchResponse(
         query=body.query,
+        strategy=retriever.strategy,
         results=[SearchResult(**asdict(result)) for result in results],
     )

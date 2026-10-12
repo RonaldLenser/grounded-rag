@@ -41,7 +41,7 @@ FastAPI · PostgreSQL + pgvector · SQLAlchemy 2.0 (async) + Alembic · Claude (
 - [x] M5: Web UI
 - [x] M6: Deploy (Cloud Run + Neon, rate limits, daily LLM budget)
 - [x] M7: Evaluation harness (33-question golden set, LLM judge, results below)
-- [ ] M8: Hybrid retrieval
+- [ ] M8: Hybrid retrieval (built behind RETRIEVAL_STRATEGY; eval decides the default)
 - [ ] M9: Streaming
 - [ ] M10: Docs and demo
 

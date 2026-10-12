@@ -88,7 +88,13 @@ class Settings(BaseSettings):
     trusted_proxy_hops: int = Field(default=0, ge=0, le=5)
 
     # ----- Retrieval -----
+    # vector: embeddings only. hybrid: embeddings + IDF-weighted keyword search,
+    # merged with Reciprocal Rank Fusion. Chosen by the eval (docs/evals/).
+    retrieval_strategy: Literal["vector", "hybrid"] = "vector"
     retrieval_top_k: int = Field(default=6, ge=1, le=20)
+    # Hybrid: how many candidates each method contributes before fusion.
+    hybrid_candidates: int = Field(default=20, ge=1, le=100)
+    rrf_k: int = Field(default=60, ge=1, le=1000)
     # HNSW search breadth: higher = better recall, slower. pgvector's default is 40.
     hnsw_ef_search: int = Field(default=100, ge=10, le=1000)
 
