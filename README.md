@@ -29,7 +29,7 @@ Rate limited per IP with a global daily cap on LLM calls. Uploads require an adm
 
 ## Stack
 
-FastAPI · PostgreSQL + pgvector · SQLAlchemy 2.0 (async) + Alembic · Claude (generation) · OpenAI embeddings · structlog · Docker · Google Cloud Run
+FastAPI · PostgreSQL + pgvector + full-text search · SQLAlchemy 2.0 (async) + Alembic · Claude (generation) · OpenAI embeddings · structlog · Docker · Google Cloud Run
 
 ## Roadmap
 
@@ -41,7 +41,7 @@ FastAPI · PostgreSQL + pgvector · SQLAlchemy 2.0 (async) + Alembic · Claude (
 - [x] M5: Web UI
 - [x] M6: Deploy (Cloud Run + Neon, rate limits, daily LLM budget)
 - [x] M7: Evaluation harness (33-question golden set, LLM judge, results below)
-- [ ] M8: Hybrid retrieval (built behind RETRIEVAL_STRATEGY; eval decides the default)
+- [x] M8: Hybrid retrieval (IDF-weighted keyword search + RRF; won the eval, now the default)
 - [ ] M9: Streaming
 - [ ] M10: Docs and demo
 
@@ -127,30 +127,37 @@ uv run python -m evals.run https://<url> --judge --label my-run     # writes doc
 uv run python -m evals.run --from-json docs/evals/<run>.json --judge  # re-judge a saved run
 ```
 
-**Results** ([full report](docs/evals/2026-10-12-v1.md), live demo, 2026-10-12, Claude Sonnet 5.5,
-judged by Claude Haiku 5.5):
+**Results** (live demo, 2026-10-12, Claude Sonnet 5.5, judged by Claude Haiku 5.5). Same 33
+questions, before and after hybrid retrieval:
 
-| What | Result |
-|---|---|
-| Answerable questions answered (not refused) | 22 / 24 |
-| Answers correct vs hand-written reference (LLM judge) | 22 / 22 |
-| Unanswerable on-topic questions refused | 6 / 6 |
-| Off-topic questions refused before any LLM call | 3 / 3 |
-| Shown claims fully supported by their quotes (LLM judge) | 72 / 78, none unsupported |
-| Answered questions citing an expected page | 22 / 22 |
-| Retrieval Hit@6 / MRR | 92% / 0.81 |
-| Latency p50 / p95 (LLM answers) | 2.9s / 6.5s |
+| What | Vector only ([v1](docs/evals/2026-10-12-v1.md)) | Hybrid ([v2](docs/evals/2026-10-12-v2-hybrid.md)) |
+|---|---|---|
+| Answerable questions answered (not refused) | 22 / 24 | **24 / 24** |
+| Answers correct vs hand-written reference (LLM judge) | 22 / 22 | **24 / 24** |
+| Right page retrieved: top 3 / top 6 | 88% / 92% | **100% / 100%** |
+| Retrieval MRR | 0.81 | **0.88** |
+| Unanswerable on-topic questions: no unsupported answer | 6 / 6 | 6 / 6 |
+| Off-topic questions refused before any LLM call | 3 / 3 | 3 / 3 |
+| Shown claims fully supported by their quotes (LLM judge) | 72 / 78 | 81 / 86 |
+| Shown claims NOT supported by their quotes | 0 | 0 |
+| Answered questions citing an expected page | 22 / 22 | 24 / 24 |
+| Latency p50 / p95 (LLM answers) | 2.9s / 6.5s | 3.4s / 7.1s |
 
 What the numbers say:
-- Both refusals of answerable questions were retrieval misses (the right page was not in the
-  top 6), not model errors. That is the measured case for hybrid retrieval (next milestone).
-- The 6 claims rated "partially supported" were checked by hand: the extra detail came from the
-  source document but outside the quoted span, or was attribution wording ("MANAGE 1.3
-  states..."). No fabricated fact was found.
+- Vector search missed two pages that keyword search finds by exact terms ("residual risk",
+  "eliminate negative risk entirely"). Hybrid retrieval (vector + IDF-weighted keyword search,
+  merged with Reciprocal Rank Fusion) fixed both with no regressions, so it is now the default.
+- Every "partially supported" claim was checked by hand: the extra detail came from the source
+  document but outside the quoted span, or was attribution wording ("MANAGE 1.3 states...").
+  No fabricated fact was found.
+- With hybrid, one unanswerable question ("What penalties does NIST impose?") got a `partial`
+  answer: the one supported fact that the framework is voluntary, plus a notice that the
+  documents only partly answer. No penalty was invented.
 - The baseline run ([report](docs/evals/2026-10-12-baseline.md)) caught a real bug: claim-format
   answers hit the 1024-token output cap and returned 502. Fixed (2048 cap, at most 8 claims).
-- Small sample (33 questions): one question is about 4 points. Treat it as a regression
-  check, not a benchmark.
+- Small sample (33 questions): one question is about 4 points, and the keyword method was
+  chosen after seeing these questions' failures. Treat this as a regression check, not a
+  benchmark; a held-out question set is the next step for an unbiased number.
 
 ### Privacy and data retention
 

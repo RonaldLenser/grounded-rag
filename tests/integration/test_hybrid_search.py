@@ -1,5 +1,7 @@
 """Hybrid retrieval against a real Postgres: keyword weighting, fusion, isolation.
 
+Hybrid is the default (M8 eval), so every other API test also runs through it.
+
 The embedder here returns the SAME vector for every text, so vector search can't
 tell chunks apart. Whatever ranks first must have been put there by keyword search.
 """
@@ -159,6 +161,7 @@ def test_query_reports_strategy_and_answers_from_the_keyword_match(
 
 
 def test_vector_mode_reports_no_ranks(api: TestClient) -> None:
+    api.app.state.settings.retrieval_strategy = "vector"  # type: ignore[attr-defined]
     collection_id = _seed(api, "vec")
 
     body = _search(api, collection_id, "residual risk")
