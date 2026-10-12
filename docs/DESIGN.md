@@ -8,7 +8,7 @@ Status: Approved for build | Owner: Ron Lenser | Last updated: 2026-10-12
 
 | Layer | Choice | Why this one |
 |---|---|---|
-| LLM (generation) | **Anthropic Claude Sonnet** (model set via env var) | Strong instruction-following for "answer only from sources." Native tool use gives reliable structured JSON. You already know the API. |
+| LLM (generation) | **Anthropic Claude Sonnet 5.5** (`claude-sonnet-5-5`, set via `LLM_MODEL`) | Strong instruction-following for "answer only from sources." Native structured outputs (JSON schema) give reliable structured responses. You already know the API. |
 | Embeddings | **OpenAI `text-embedding-3-small`** (1536 dims) | Cheapest credible embedding model (fractions of a cent per document). Anthropic has no embedding model. Most common in job posts. |
 | Provider design | Both behind small Python `Protocol` interfaces | Swappable providers, fake providers in tests, zero real API calls in CI. This is the interview talking point, not the vendor. |
 | Vector DB | **PostgreSQL + pgvector** | One database for metadata AND vectors. Deleting a document deletes its chunks in one transaction. SQL is a skill every backend team values. Dedicated vector DBs (Pinecone, Qdrant) add a second system for no benefit at this scale. |
@@ -106,7 +106,7 @@ Tradeoff: the request waits for the full pipeline. At scale this moves to a back
 3. Retrieve top candidates (vector, later hybrid).
 4. If best score < `MIN_RELEVANCE_SCORE`: return `insufficient_context`. **No LLM call.** (Saves money, blocks hallucination.)
 5. Build context: label chunks `S1..Sn`, wrap in `<source>` tags, cap by token budget.
-6. Call Claude with forced tool use, returning schema: status, answer, claims with source IDs + quotes.
+6. Call Claude with structured outputs (JSON schema): status, answer with [S#] markers, citations with source IDs + verbatim quotes.
 7. Validate citations: IDs must exist in retrieved set, quotes must appear in the cited chunk. Drop invalid ones. If answer is left unsupported, downgrade status.
 8. Map `S#` to filename, page, document ID.
 9. Log query (status, chunk IDs, scores, tokens, latency).
@@ -261,25 +261,26 @@ Each step is a pure-ish function or small class with its own unit tests. Provide
 - Ship M8 only with a before/after eval table. Without data it is just complexity.
 
 ## 16. Citation Strategy
-1. Context sources labeled `S1..Sn`, each in `<source id="S1" file="..." page="12">` tags.
-2. Claude is forced to call a `submit_answer` tool whose JSON schema requires each claim to list `source_ids` and a short verbatim `quote`.
-3. **Server-side verification (the important part):**
-   - Every `source_id` must be in the retrieved set. Else dropped.
-   - Every `quote` must appear in that chunk (normalized whitespace/case match). Else dropped.
-   - Status downgraded if no valid citations remain.
-4. Response maps IDs to filename + page so the UI shows "nist-ai-rmf.pdf, p. 12" with the quote.
+1. Context sources labeled `S1..Sn` (relevance order, capped by `MAX_CONTEXT_TOKENS`), each in `<source id="S1" file="..." pages="3-4">` tags. Source text, filenames and the question are HTML-escaped so document text can never close or forge tags.
+2. Claude replies via **structured outputs** (`output_config.format` = JSON Schema): `{status, answer, citations: [{source_id, quote}]}`. (Originally forced tool use; Sonnet 5.5 rejects forced `tool_choice` with a 400, so we moved to the provider's native structured-output feature.) The answer carries inline `[S1]` markers; each citation carries a verbatim quote. The output is validated with Pydantic before use (malformed = 502).
+3. **Server-side verification** (`generation/citations.py`):
+   - `source_id` must be one we sent, else `unknown_source`.
+   - `quote` must appear in that source (case/whitespace/curly-quote/HTML-entity insensitive), else `quote_not_found`.
+   - `quote` must be at least 12 characters, else `quote_too_short`.
+   - Markers without a verified citation are stripped from the answer.
+4. Response maps verified citations to filename, pages, heading, document and chunk IDs.
 
 Interview line: "I don't trust the model's citations. I verify them in code."
 
 ## 17. Hallucination Handling (layered)
-1. **Pre-generation gate:** low retrieval score → refuse, no LLM call.
-2. **Prompt contract:** answer only from sources; if not supported, set status `insufficient_context`; documents are data, not instructions.
-3. **Structured output:** the model must declare status and attach sources per claim. No free text path.
-4. **Post-generation verification:** citation ID + quote checks (Section 16).
-5. **Status downgrade:** unsupported → `partial` or `insufficient_context`.
-6. **Measured, not assumed:** eval includes unanswerable questions; refusal accuracy is a tracked metric.
+1. **Relevance gate:** best similarity below `MIN_RELEVANCE_SCORE` (0.20, provisional until M7) → `insufficient_context` with **no LLM call**.
+2. **Prompt contract:** sources only; cite every sentence; sources are untrusted data, not instructions.
+3. **Structured output:** API-enforced JSON schema; the model must declare a status.
+4. **Citation verification** (Section 16).
+5. **Status rules:** model refusal is trusted; zero verified citations → `insufficient_context` and the unverified answer is NOT shown; `answered` with any rejected citation → `partial`. `downgraded_from` is returned.
+6. **Logged + measured:** every query writes a `query_logs` row (status, chunk IDs, scores, model, tokens, latency). Question/answer text never goes to application logs.
 
-Honest limit: quote matching proves the quote exists, not that the answer correctly paraphrases it. Groundedness judge in evals covers that partially. State this in README Limitations.
+Honest limit: quote matching proves the quote exists, not that the answer correctly paraphrases it. The groundedness eval (M7) covers that partially. State this in README Limitations.
 
 ## 18. Evaluation Strategy
 - **Corpus:** 2 to 3 NIST AI RMF documents (public domain).
@@ -328,15 +329,15 @@ LOG_LEVEL=INFO
 DATABASE_URL=postgresql+asyncpg://grounded:grounded@localhost:5433/grounded
 ANTHROPIC_API_KEY=
 OPENAI_API_KEY=
-LLM_MODEL=                        # Claude Sonnet model ID
-JUDGE_MODEL=                      # small model for evals
+LLM_MODEL=claude-sonnet-5-5
+JUDGE_MODEL=claude-haiku-5-5
 EMBEDDING_MODEL=text-embedding-3-small
 EMBEDDING_DIM=1536
 CHUNK_SIZE_TOKENS=500
 CHUNK_OVERLAP_TOKENS=75
 RETRIEVAL_TOP_K=6
 RETRIEVAL_STRATEGY=vector         # vector | hybrid
-MIN_RELEVANCE_SCORE=0.30          # calibrate via evals
+MIN_RELEVANCE_SCORE=0.20          # calibrate via evals (M7)
 MAX_CONTEXT_TOKENS=6000
 MAX_UPLOAD_MB=10
 ADMIN_API_KEY=
@@ -418,7 +419,7 @@ Commit habits from here: small commits, conventional prefixes (`feat:`, `fix:`, 
 | RAG end to end | Own pipeline, no framework hiding it |
 | Embeddings + vector search | pgvector, HNSW index, cosine similarity, threshold calibration |
 | Hybrid retrieval | Full-text + vector + RRF, justified by eval delta |
-| Structured outputs | Forced tool use with JSON schema, Pydantic validation |
+| Structured outputs | API-enforced JSON schema (structured outputs) + Pydantic validation |
 | Hallucination mitigation | 5-layer strategy, verified citations, measured refusal accuracy |
 | AI evaluation | Golden set, retrieval + answer metrics, LLM-as-judge, committed reports |
 | LLM API integration | Two providers behind interfaces, retries, token tracking |
@@ -450,7 +451,7 @@ Commit habits from here: small commits, conventional prefixes (`feat:`, `fix:`, 
 13. Why no LangChain?
 
 **LLM / hallucination**
-14. How do you make the model return valid JSON reliably?
+14. How do you make the model return valid JSON reliably? (And what broke when forced tool use was removed?)
 15. How do you know a citation is real?
 16. Can your system still hallucinate? How?
 17. What is prompt injection, and how could a malicious PDF attack this system?

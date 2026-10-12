@@ -15,8 +15,9 @@ from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, async_sessionmaker
 
 from grounded.config import Settings
 from grounded.errors import AuthenticationError, ProviderNotConfiguredError, WritesDisabledError
+from grounded.generation.answerer import Answerer
 from grounded.ingestion.service import IngestionService
-from grounded.providers.base import Embedder
+from grounded.providers.base import Embedder, LLMClient
 from grounded.retrieval.retriever import Retriever
 
 API_KEY_HEADER = APIKeyHeader(name="X-API-Key", auto_error=False)
@@ -79,3 +80,22 @@ def get_retriever(session: SessionDep, embedder: EmbedderDep, settings: Settings
 
 
 RetrieverDep = Annotated[Retriever, Depends(get_retriever)]
+
+
+def get_llm(request: Request) -> LLMClient:
+    llm: LLMClient | None = request.app.state.llm
+    if llm is None:
+        raise ProviderNotConfiguredError("Answers are not configured (ANTHROPIC_API_KEY is unset)")
+    return llm
+
+
+LLMDep = Annotated[LLMClient, Depends(get_llm)]
+
+
+def get_answerer(
+    session: SessionDep, retriever: RetrieverDep, llm: LLMDep, settings: SettingsDep
+) -> Answerer:
+    return Answerer(session=session, retriever=retriever, llm=llm, settings=settings)
+
+
+AnswererDep = Annotated[Answerer, Depends(get_answerer)]

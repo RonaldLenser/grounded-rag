@@ -10,7 +10,7 @@ from collections.abc import Sequence
 from sqlalchemy import func, select, text
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from grounded.db.models import Chunk, Collection, Document
+from grounded.db.models import Chunk, Collection, Document, QueryLog
 
 
 # ----- Collections -----
@@ -108,3 +108,33 @@ async def search_chunks_by_vector(
     )
     rows = await session.execute(statement)
     return [(chunk, filename, float(similarity)) for chunk, filename, similarity in rows]
+
+
+# ----- Query logs -----
+async def add_query_log(
+    session: AsyncSession,
+    *,
+    collection_id: uuid.UUID,
+    question: str,
+    status: str,
+    retrieved_chunk_ids: list[uuid.UUID],
+    scores: list[float],
+    model: str | None,
+    input_tokens: int | None,
+    output_tokens: int | None,
+    latency_ms: int,
+) -> QueryLog:
+    log = QueryLog(
+        collection_id=collection_id,
+        question=question,
+        status=status,
+        retrieved_chunk_ids=retrieved_chunk_ids,
+        scores=scores,
+        model=model,
+        input_tokens=input_tokens,
+        output_tokens=output_tokens,
+        latency_ms=latency_ms,
+    )
+    session.add(log)
+    await session.flush()
+    return log

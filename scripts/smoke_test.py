@@ -1,7 +1,7 @@
 """End-to-end smoke test against a RUNNING Grounded server.
 
 Unlike the pytest suite (which fakes the embedding provider), this uses the
-real stack: real server, real database, real OpenAI embeddings. Use it to
+real stack: real server, real database, real OpenAI embeddings, real Claude. Use it to
 check a local Docker run or a deployed instance.
 
 Usage:
@@ -9,7 +9,7 @@ Usage:
     uv run python scripts/smoke_test.py https://your-app.run.app
 
 Reads ADMIN_API_KEY from the environment or from .env. Exit code 0 = all passed.
-Cost: one tiny embedding request (fractions of a cent).
+Cost: a few embedding requests and one Claude call (well under one cent).
 """
 
 import os
@@ -108,6 +108,8 @@ class SmokeTest:
             f"relevant={relevant}, unrelated={unrelated}",
         )
 
+        self._check_answers(collection_id)
+
         duplicate = self.client.post(
             f"/v1/collections/{collection_id}/documents",
             files={"file": ("renamed.pdf", SAMPLE_PDF.read_bytes(), "application/pdf")},
@@ -133,6 +135,37 @@ class SmokeTest:
             return 1
         print("ALL CHECKS PASSED")
         return 0
+
+    def _check_answers(self, collection_id: str) -> None:
+        url = f"/v1/collections/{collection_id}/query"
+
+        grounded = self.client.post(
+            url, json={"question": "What does the MEASURE function use to analyze AI risk?"}
+        )
+        body = grounded.json() if grounded.status_code == 200 else {}
+        self.check(
+            "answer a covered question with a verified citation (REAL Claude)",
+            body.get("status") in ("answered", "partial") and len(body.get("citations", [])) > 0,
+            _fail(grounded) or f"status={body.get('status')}",
+        )
+        if body:
+            print(f"      answer: {body['answer']}")
+            for c in body["citations"]:
+                print(f'      [{c["source_id"]}] "{c["quote"]}" ({c["filename"]})')
+            usage = body["usage"]
+            print(
+                f"      {usage['model']}: {usage['input_tokens']} in / "
+                f"{usage['output_tokens']} out tokens, {body['latency_ms']} ms"
+            )
+
+        refused = self.client.post(url, json={"question": "best chocolate chip cookie recipe"})
+        refused_body = refused.json() if refused.status_code == 200 else {}
+        self.check(
+            "refuse an unrelated question without calling the LLM",
+            refused_body.get("status") == "insufficient_context"
+            and refused_body.get("usage", {}).get("llm_called") is False,
+            _fail(refused),
+        )
 
     def _top_score(self, collection_id: str, query: str) -> float | None:
         response = self.client.post(

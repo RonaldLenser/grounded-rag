@@ -33,7 +33,11 @@ def _clear_settings_cache() -> Iterator[None]:
 
 @pytest.fixture
 def settings() -> Settings:
-    return Settings(app_env="test", database_url=os.environ["DATABASE_URL"])
+    return Settings(  # type: ignore[call-arg]
+        _env_file=None,  # tests must not depend on a developer's local .env
+        app_env="test",
+        database_url=os.environ["DATABASE_URL"],
+    )
 
 
 @pytest.fixture

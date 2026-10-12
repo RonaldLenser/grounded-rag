@@ -1,13 +1,17 @@
 """Test doubles for external providers. No network, no API keys, no cost."""
 
 import hashlib
+import html
 import math
 import re
+from typing import Any
 
 from grounded.db.models import EMBEDDING_DIM
-from grounded.errors import EmbeddingProviderError
+from grounded.errors import EmbeddingProviderError, LLMProviderError
+from grounded.providers.base import OutputSchema, StructuredCompletion
 
 _WORD = re.compile(r"[a-z0-9]+")
+_SOURCE_BLOCK = re.compile(r'<source id="S1"[^>]*>\n(?P<content>.*?)\n</source>', re.DOTALL)
 _STOPWORDS = frozenset(
     [
         "a",
@@ -80,3 +84,44 @@ class FakeEmbedder:
             values[index] += 1.0
         norm = math.sqrt(sum(v * v for v in values))
         return [v / norm for v in values]
+
+
+class FakeLLM:
+    """Offline stand-in for Claude.
+
+    By default it behaves like a well-behaved model: it reads the sources in the
+    prompt, answers from S1, and quotes S1's first sentence exactly. Tests can
+    instead script an exact response (`respond_with`) to simulate bad behavior:
+    invented sources, invented quotes, refusals, malformed JSON.
+    """
+
+    def __init__(self) -> None:
+        self.respond_with: dict[str, Any] | None = None
+        self.fail = False
+        self.calls: list[dict[str, Any]] = []
+
+    @property
+    def model(self) -> str:
+        return "fake-llm"
+
+    async def complete_structured(
+        self, *, system: str, user: str, output: OutputSchema, max_tokens: int
+    ) -> StructuredCompletion:
+        self.calls.append({"system": system, "user": user, "schema": output.name})
+        if self.fail:
+            raise LLMProviderError("The language model failed. Try again later.")
+        data = self.respond_with if self.respond_with is not None else self._grounded(user)
+        return StructuredCompletion(data=data, model=self.model, input_tokens=100, output_tokens=20)
+
+    @staticmethod
+    def _grounded(user: str) -> dict[str, Any]:
+        match = _SOURCE_BLOCK.search(user)
+        if match is None:
+            return {"status": "insufficient_context", "answer": "No sources.", "citations": []}
+        content = html.unescape(match.group("content"))
+        first_sentence = content.split(". ")[0].split("\n")[-1].strip()
+        return {
+            "status": "answered",
+            "answer": f"According to the documents, {first_sentence} [S1]",
+            "citations": [{"source_id": "S1", "quote": first_sentence}],
+        }
