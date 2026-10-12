@@ -347,15 +347,16 @@ CORS_ORIGINS=http://localhost:8000
 ```
 
 ## 22. Deployment
-1. Neon project → enable `vector` extension → copy connection string.
-2. Run Alembic migrations against Neon (from CI or locally).
-3. Build image → push to Google Artifact Registry.
-4. Deploy to Cloud Run: min instances 0, max 2, memory 1 GiB, secrets from Secret Manager.
-5. Seed demo collection with NIST docs via `scripts/seed_demo.py`.
-6. GitHub Actions `deploy.yml`: on push to `main` after CI passes, build + deploy using Workload Identity Federation (no long-lived JSON keys in GitHub).
-7. Public URL in README + repo "About" sidebar.
+Full runbook: [DEPLOY.md](DEPLOY.md). Summary:
+1. Neon project (Postgres 17, AWS us-east-1), **direct** (non-pooled) connection string. The app normalizes `postgresql://...?sslmode=require` to asyncpg format and rejects `-pooler` hosts (PgBouncer transaction mode breaks asyncpg prepared statements).
+2. `alembic upgrade head` against Neon from a dev machine.
+3. Secrets in Google Secret Manager, typed at a hidden prompt; app strips whitespace so piped newlines can't corrupt keys.
+4. `gcloud run deploy --source .` (Cloud Build builds the plain-syntax Dockerfile): us-east4, min 0 / max 2 instances, 1 GiB, concurrency 20, `APP_ENV=prod`, `TRUSTED_PROXY_HOPS=1`.
+5. `scripts/seed_demo.py` loads the NIST corpus; `scripts/smoke_test.py --check-rate-limit` verifies end to end, including X-Forwarded-For spoofing resistance.
 
-Tradeoff to state: cold start of a few seconds on first request (scale-to-zero). Fine for a demo, would set min instances 1 in a real product.
+Abuse/cost controls: per-IP sliding-window limits (10 queries/min, 30 searches/min, in-memory per instance), a DB-backed global cap of 300 LLM calls per rolling 24h, admin-key-only writes. uvicorn runs with `--no-proxy-headers` so exactly one component (the app) derives the client IP.
+
+Tradeoffs: scale-to-zero cold starts (a few seconds); rate limits are per instance (max 2x with 2 instances), while the daily budget is exact. CI/CD via GitHub Actions + Workload Identity Federation is a later improvement; deploys are a single scripted command for now.
 
 ## 23. README Outline
 1. Title + one-line pitch + badges (CI, license, Python)

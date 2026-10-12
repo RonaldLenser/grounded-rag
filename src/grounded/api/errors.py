@@ -21,10 +21,18 @@ from grounded.errors import AppError, DuplicateDocumentError
 logger = structlog.get_logger(__name__)
 
 
-def _error_response(status_code: int, code: str, message: str, **extra: Any) -> JSONResponse:
+def _error_response(
+    status_code: int,
+    code: str,
+    message: str,
+    headers: dict[str, str] | None = None,
+    **extra: Any,
+) -> JSONResponse:
     request_id = structlog.contextvars.get_contextvars().get("request_id")
     body: dict[str, Any] = {"code": code, "message": message, "request_id": request_id, **extra}
-    return JSONResponse(status_code=status_code, content={"error": jsonable_encoder(body)})
+    return JSONResponse(
+        status_code=status_code, content={"error": jsonable_encoder(body)}, headers=headers
+    )
 
 
 def register_error_handlers(app: FastAPI) -> None:
@@ -37,7 +45,9 @@ def register_error_handlers(app: FastAPI) -> None:
             if isinstance(exc, DuplicateDocumentError)
             else {}
         )
-        return _error_response(exc.status_code, exc.code, exc.message, **extra)
+        return _error_response(
+            exc.status_code, exc.code, exc.message, headers=exc.headers or None, **extra
+        )
 
     @app.exception_handler(RequestValidationError)
     async def handle_validation_error(_: Request, exc: RequestValidationError) -> JSONResponse:

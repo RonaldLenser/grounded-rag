@@ -7,6 +7,7 @@ check a local Docker run or a deployed instance.
 Usage:
     uv run python scripts/smoke_test.py                       # http://localhost:8000
     uv run python scripts/smoke_test.py https://your-app.run.app
+    uv run python scripts/smoke_test.py <url> --check-rate-limit   # + spoofing test (~35 searches)
 
 Reads ADMIN_API_KEY from the environment or from .env. Exit code 0 = all passed.
 Cost: a few embedding requests and one Claude call (well under one cent).
@@ -21,6 +22,8 @@ import httpx2
 
 SAMPLE_PDF = Path(__file__).resolve().parent.parent / "tests" / "fixtures" / "sample.pdf"
 TIMEOUT_SECONDS = 60.0
+READY_WAIT_SECONDS = 60
+SPOOF_ATTEMPTS = 35  # search limit is 30/minute per client
 
 
 def load_admin_key() -> str:
@@ -36,7 +39,8 @@ def load_admin_key() -> str:
 
 
 class SmokeTest:
-    def __init__(self, base_url: str, admin_key: str) -> None:
+    def __init__(self, base_url: str, admin_key: str, *, check_rate_limit: bool = False) -> None:
+        self.check_rate_limit = check_rate_limit
         self.client = httpx2.Client(
             base_url=base_url, headers={"X-API-Key": admin_key}, timeout=TIMEOUT_SECONDS
         )
@@ -52,10 +56,14 @@ class SmokeTest:
     def run(self) -> int:
         print(f"Smoke testing {self.client.base_url}\n")
 
-        try:
-            ready = self.client.get("/ready")
-        except httpx2.HTTPError as exc:
-            self.check("server is reachable", False, f"{type(exc).__name__}: is it running?")
+        ready = self._wait_until_ready()
+        if ready is None:
+            self.check(
+                "server is reachable",
+                False,
+                f"no response after {READY_WAIT_SECONDS}s: is it running? "
+                "Check `docker compose logs app`",
+            )
             return 1
         if not self.check(
             "server ready + database connected", ready.status_code == 200, _fail(ready)
@@ -125,6 +133,9 @@ class SmokeTest:
         )
         self.check("wrong admin key is rejected", unauthorized.status_code == 401)
 
+        if self.check_rate_limit:
+            self._check_rate_limit_resists_spoofing(collection_id)
+
         deleted = self.client.delete(f"/v1/documents/{document['id']}")
         gone = self.client.get(f"/v1/documents/{document['id']}")
         self.check("delete document", deleted.status_code == 204 and gone.status_code == 404)
@@ -135,6 +146,44 @@ class SmokeTest:
             return 1
         print("ALL CHECKS PASSED")
         return 0
+
+    def _wait_until_ready(self) -> httpx2.Response | None:
+        """Containers and serverless instances need a few seconds to boot (cold start).
+        Poll /ready instead of failing on the first refused connection."""
+        deadline = time.monotonic() + READY_WAIT_SECONDS
+        last: httpx2.Response | None = None
+        while time.monotonic() < deadline:
+            try:
+                last = self.client.get("/ready", timeout=5.0)
+                if last.status_code == 200:
+                    return last
+            except httpx2.HTTPError:
+                pass
+            time.sleep(1.0)
+        return last
+
+    def _check_rate_limit_resists_spoofing(self, collection_id: str) -> None:
+        """Every request claims a different fake IP. If the server trusted that,
+        it would never rate-limit us. It must ignore it and block us anyway."""
+        url = f"/v1/collections/{collection_id}/search"
+        for attempt in range(1, SPOOF_ATTEMPTS + 1):
+            response = self.client.post(
+                url,
+                json={"query": "risk", "top_k": 1},
+                headers={"X-Forwarded-For": f"10.{attempt}.0.1"},
+            )
+            if response.status_code == 429:
+                self.check(
+                    "rate limit can't be bypassed with spoofed X-Forwarded-For",
+                    True,
+                    f"blocked at request {attempt}",
+                )
+                return
+        self.check(
+            "rate limit can't be bypassed with spoofed X-Forwarded-For",
+            False,
+            f"{SPOOF_ATTEMPTS} spoofed requests were never limited",
+        )
 
     def _check_answers(self, collection_id: str) -> None:
         url = f"/v1/collections/{collection_id}/query"
@@ -183,5 +232,9 @@ def _fail(response: httpx2.Response) -> str:
 
 
 if __name__ == "__main__":
-    url = sys.argv[1] if len(sys.argv) > 1 else "http://localhost:8000"
-    sys.exit(SmokeTest(url.rstrip("/"), load_admin_key()).run())
+    args = [a for a in sys.argv[1:] if not a.startswith("--")]
+    url = args[0] if args else "http://localhost:8000"
+    smoke = SmokeTest(
+        url.rstrip("/"), load_admin_key(), check_rate_limit="--check-rate-limit" in sys.argv
+    )
+    sys.exit(smoke.run())
