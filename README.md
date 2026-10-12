@@ -26,7 +26,7 @@ FastAPI · PostgreSQL + pgvector · SQLAlchemy 2.0 (async) + Alembic · Claude (
 - [x] M2: Document ingestion (parse, chunk, embed, store)
 - [x] M3: Vector search
 - [x] M4: Cited answers with citation verification and refusals
-- [ ] M5: Web UI
+- [x] M5: Web UI
 - [ ] M6: Deploy
 - [ ] M7: Evaluation harness
 - [ ] M8: Hybrid retrieval
@@ -43,6 +43,7 @@ docker compose up --build
 
 Starts Postgres + pgvector, applies database migrations, then serves the API.
 
+- Web app: http://localhost:8000 (upload documents, ask questions, click citations)
 - API docs: http://localhost:8000/docs
 - Liveness: http://localhost:8000/health
 - Readiness (checks the database): http://localhost:8000/ready

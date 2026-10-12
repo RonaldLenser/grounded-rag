@@ -318,6 +318,7 @@ CI: GitHub Actions with a `pgvector/pgvector:pg16` service container. Gates: ruf
 - Question length cap. Context token budget cap.
 - Parameterized SQL only (SQLAlchemy). No raw string SQL.
 - CORS locked to the app's own origin.
+- Web UI: all API data rendered via `textContent` (never HTML-parsed), enforced by a test; strict Content-Security-Policy (`script-src 'self'`, no inline code, `frame-ancestors 'none'`), `nosniff`, `no-referrer`. Verified with a browser XSS test (malicious filename + document text).
 - Container runs as non-root.
 - Error responses never leak stack traces; full details in logs with request ID.
 - Query logs store questions: note in README that the demo logs queries.
