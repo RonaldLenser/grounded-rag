@@ -88,15 +88,17 @@ Layering rule: **routes** handle HTTP only. **services** hold logic. **providers
 
 ## 8. Data Flow
 
-**Ingestion**
-1. `POST /documents` receives file (multipart). Validate type, size, admin key.
-2. Hash bytes (SHA-256). If exists in collection, return existing doc (409 or 200).
-3. Insert `documents` row with status `processing`.
-4. Parse into list of `(page_number, text)`.
-5. Normalize whitespace, chunk (Section 14), keep page range + heading per chunk.
-6. Embed chunks in batches (e.g. 100 per call) with retry + backoff.
-7. Insert chunks + vectors in one transaction. Set status `ready` (or `failed` + error message).
+**Ingestion** (atomic: nothing is written until every step succeeds)
+1. `POST /documents` receives file (multipart). Check admin key, collection exists, size limit (read at most limit+1 bytes).
+2. Detect type by extension, then verify real contents (PDF magic bytes, UTF-8, not binary).
+3. Hash bytes (SHA-256). If it already exists in the collection, return 409 with the existing document ID.
+4. Parse into `(page_number, text)` and normalize whitespace (worker thread: CPU-bound).
+5. Chunk (Section 14), keeping page range + heading per chunk (worker thread).
+6. Embed all chunks in batches of 100 (SDK handles retries/backoff for 429/5xx).
+7. One transaction: insert document (`status=ready`) + all chunks with vectors. Any earlier failure leaves nothing behind.
 8. Return document metadata + chunk count.
+
+Tradeoff: the request waits for the full pipeline. At scale this moves to a background queue; `documents.status` (`processing`/`ready`/`failed`) already exists for that.
 
 **Query**
 1. `POST /query` with question. Validate length.
@@ -111,7 +113,7 @@ Layering rule: **routes** handle HTTP only. **services** hold logic. **providers
 10. Return structured response.
 
 ## 9. Exact Stack
-Python 3.12, FastAPI, Uvicorn, Pydantic v2, pydantic-settings, SQLAlchemy 2.0 async, asyncpg, Alembic, pgvector (Python + Postgres ext), pypdf, tiktoken, anthropic SDK, openai SDK, tenacity (retries), structlog, slowapi (rate limiting), pytest, pytest-asyncio, httpx2, ruff, mypy, pre-commit, uv, Docker, docker-compose, GitHub Actions, Google Cloud Run, Artifact Registry, Neon Postgres.
+Python 3.12, FastAPI, Uvicorn, Pydantic v2, pydantic-settings, SQLAlchemy 2.0 async, asyncpg, Alembic, pgvector (Python + Postgres ext), pypdf, tiktoken, anthropic SDK, openai SDK (built-in retries), python-multipart, structlog, slowapi (rate limiting), pytest, pytest-asyncio, httpx2, ruff, mypy, pre-commit, uv, Docker, docker-compose, GitHub Actions, Google Cloud Run, Artifact Registry, Neon Postgres.
 
 ## 10. Repository Structure
 
@@ -126,8 +128,9 @@ grounded-rag/
 │   │   ├── middleware.py       # request ID + access log (pure ASGI)
 │   │   ├── errors.py           # exception → HTTP mapping
 │   │   └── routes/ health.py collections.py documents.py query.py
+│   ├── errors.py               # domain errors (no HTTP knowledge)
 │   ├── schemas/                # Pydantic request/response models
-│   │   └── documents.py query.py common.py
+│   │   └── collections.py query.py
 │   ├── db/
 │   │   ├── session.py          # async engine/session
 │   │   ├── models.py           # SQLAlchemy tables

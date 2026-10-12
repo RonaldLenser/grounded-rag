@@ -58,4 +58,5 @@ class RequestContextMiddleware:
                 status=status_code,
                 duration_ms=round((time.perf_counter() - start) * 1000, 1),
             )
-            structlog.contextvars.clear_contextvars()
+            # Not cleared here on purpose: the 500 handler runs after this point
+            # and still needs request_id. Each new request clears it at the top.

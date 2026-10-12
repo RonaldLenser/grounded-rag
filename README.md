@@ -23,7 +23,7 @@ FastAPI · PostgreSQL + pgvector · SQLAlchemy 2.0 (async) + Alembic · Claude (
 
 - [x] M0: Project scaffold, tooling, CI
 - [x] M1: Config, structured logging, database schema, migrations, Docker Compose
-- [ ] M2: Document ingestion (parse, chunk, embed, store)
+- [x] M2: Document ingestion (parse, chunk, embed, store)
 - [ ] M3: Vector search
 - [ ] M4: Cited answers with citation verification and refusals
 - [ ] M5: Web UI
@@ -59,6 +59,23 @@ docker compose up -d db                 # start only the database
 uv run alembic upgrade head             # create/upgrade the schema
 uv run uvicorn grounded.main:create_app --factory --reload
 ```
+
+### Try ingestion
+
+Set `OPENAI_API_KEY` and `ADMIN_API_KEY` in `.env`, start the app, then:
+
+```bash
+# create a collection
+curl -X POST localhost:8000/v1/collections \
+  -H "X-API-Key: $ADMIN_API_KEY" -H "Content-Type: application/json" \
+  -d '{"name": "my-docs"}'
+
+# upload a document (PDF, .md, or .txt)
+curl -X POST localhost:8000/v1/collections/<collection-id>/documents \
+  -H "X-API-Key: $ADMIN_API_KEY" -F "file=@policy.pdf"
+```
+
+Or use the interactive docs at http://localhost:8000/docs (click **Authorize** and paste the admin key).
 
 ### Tests
 

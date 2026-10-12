@@ -1,7 +1,8 @@
 """Integration tests against a real PostgreSQL + pgvector database.
 
-These prove the things mocks can't: the migration actually runs, the schema
-matches the models, and Postgres enforces our constraints.
+These prove the things mocks can't: the migration actually runs (see the
+`migrated` fixture in conftest.py), the schema matches the models, and
+Postgres enforces our constraints.
 """
 
 import asyncio
@@ -10,9 +11,7 @@ from collections.abc import Awaitable, Callable
 from typing import Any
 
 import pytest
-from alembic import command
 from alembic.autogenerate import compare_metadata
-from alembic.config import Config
 from alembic.migration import MigrationContext
 from fastapi.testclient import TestClient
 from sqlalchemy import delete, select, text
@@ -35,18 +34,6 @@ def run_with_engine[T](fn: Callable[[AsyncEngine], Awaitable[T]]) -> T:
     return asyncio.run(runner())
 
 
-@pytest.fixture(scope="module")
-def migrated() -> None:
-    """Rebuild the schema from zero: downgrade to nothing, then upgrade to latest.
-
-    This doubles as a round-trip test: both directions of every migration run.
-    """
-    config = Config("alembic.ini")
-    command.downgrade(config, "base")
-    command.upgrade(config, "head")
-
-
-@pytest.mark.usefixtures("migrated")
 def test_ready_returns_ok_with_real_database(client: TestClient) -> None:
     response = client.get("/ready")
 
@@ -54,7 +41,6 @@ def test_ready_returns_ok_with_real_database(client: TestClient) -> None:
     assert response.json() == {"status": "ready", "database": "ok"}
 
 
-@pytest.mark.usefixtures("migrated")
 def test_models_match_migrations() -> None:
     """Fails if someone changes models.py without writing a migration (or vice versa)."""
 
@@ -69,7 +55,6 @@ def test_models_match_migrations() -> None:
     assert run_with_engine(diff) == []
 
 
-@pytest.mark.usefixtures("migrated")
 def test_pgvector_extension_and_indexes_exist() -> None:
     async def inspect(engine: AsyncEngine) -> tuple[str | None, set[str]]:
         async with engine.connect() as conn:
@@ -99,7 +84,6 @@ async def _seed_document(session: AsyncSession, sha: str = "a" * 64) -> Document
     return document
 
 
-@pytest.mark.usefixtures("migrated")
 def test_chunk_round_trip_with_vector_and_generated_tsv() -> None:
     async def scenario(engine: AsyncEngine) -> tuple[list[float], str]:
         async with AsyncSession(engine) as session:
@@ -130,7 +114,6 @@ def test_chunk_round_trip_with_vector_and_generated_tsv() -> None:
     assert "framework" in tsv
 
 
-@pytest.mark.usefixtures("migrated")
 def test_duplicate_upload_in_same_collection_is_rejected() -> None:
     async def scenario(engine: AsyncEngine) -> None:
         async with AsyncSession(engine) as session:
@@ -151,7 +134,6 @@ def test_duplicate_upload_in_same_collection_is_rejected() -> None:
     run_with_engine(scenario)
 
 
-@pytest.mark.usefixtures("migrated")
 def test_invalid_document_status_is_rejected() -> None:
     async def scenario(engine: AsyncEngine) -> None:
         async with AsyncSession(engine) as session:
@@ -164,7 +146,6 @@ def test_invalid_document_status_is_rejected() -> None:
     run_with_engine(scenario)
 
 
-@pytest.mark.usefixtures("migrated")
 def test_deleting_collection_cascades_to_documents_and_chunks() -> None:
     async def scenario(engine: AsyncEngine) -> tuple[bool, bool]:
         async with AsyncSession(engine) as session:

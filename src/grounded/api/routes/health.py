@@ -44,7 +44,16 @@ def health() -> HealthResponse:
 @router.get(
     "/ready",
     response_model=ReadyResponse,
-    responses={status.HTTP_503_SERVICE_UNAVAILABLE: {"model": ReadyResponse}},
+    responses={
+        status.HTTP_503_SERVICE_UNAVAILABLE: {
+            "model": ReadyResponse,
+            "content": {
+                "application/json": {
+                    "example": {"status": "unavailable", "database": "unreachable"}
+                }
+            },
+        }
+    },
 )
 async def ready(engine: EngineDep, response: Response) -> ReadyResponse:
     try:
