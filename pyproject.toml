@@ -8,6 +8,7 @@ authors = [{ name = "Ron Lenser" }]
 requires-python = ">=3.12"
 dependencies = [
     "alembic>=1.20.0",
+    "anthropic>=1.13.0",
     "asyncpg>=0.32.0",
     "fastapi>=0.143.0",
     "openai>=3.29.0",

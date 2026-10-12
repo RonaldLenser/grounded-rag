@@ -11,6 +11,7 @@ def test_valid_settings_load() -> None:
         database_url=VALID_URL,
         app_env="prod",
         openai_api_key="sk-test",  # type: ignore[arg-type]
+        anthropic_api_key="sk-ant-test",  # type: ignore[arg-type]
         admin_api_key="a-long-enough-admin-key",  # type: ignore[arg-type]
     )
 
@@ -55,7 +56,7 @@ def test_embedding_dim_must_match_the_database_column() -> None:
 
 
 def test_prod_requires_api_keys() -> None:
-    with pytest.raises(ValidationError, match="OPENAI_API_KEY, ADMIN_API_KEY"):
+    with pytest.raises(ValidationError, match="OPENAI_API_KEY, ANTHROPIC_API_KEY, ADMIN_API_KEY"):
         Settings(database_url=VALID_URL, app_env="prod", _env_file=None)  # type: ignore[call-arg]
 
 
