@@ -93,6 +93,7 @@ Layering rule: **routes** handle HTTP only. **services** hold logic. **providers
 2. Detect type by extension, then verify real contents (PDF magic bytes, UTF-8, not binary).
 3. Hash bytes (SHA-256). If it already exists in the collection, return 409 with the existing document ID.
 4. Parse into `(page_number, text)` and normalize whitespace (worker thread: CPU-bound).
+   - PDFs only (M10): repair words hyphenated across line breaks and stray spaces before punctuation. Citation quotes showed "illus- trated" and "GOVERN , MAP", and split words were invisible to keyword search. A trailing hyphen can be soft ("illus-trated" -> "illustrated") or real ("red-teaming"), so the rule uses the whole document as evidence: keep the hyphen if the compound appears inline elsewhere, join if the joined word appears elsewhere, otherwise follow the document's majority (typesetters are consistent within one document; ties keep the hyphen). Stopword, number, and capitalized fragments are never guessed without evidence. On the demo PDFs, leftover line-break hyphens went from 20 to 5 (RMF) and 13 to 9 (GenAI profile); the rest are URLs, page footers, and splits with no evidence. Known miss: "cost-effective" gets joined in the RMF (soft-hyphen majority, no inline evidence). Existing documents keep their old text until re-ingested (`seed_demo.py --replace`).
 5. Chunk (Section 14), keeping page range + heading per chunk (worker thread).
 6. Embed all chunks in batches of 100 (SDK handles retries/backoff for 429/5xx).
 7. One transaction: insert document (`status=ready`) + all chunks with vectors. Any earlier failure leaves nothing behind.
@@ -415,8 +416,8 @@ Tradeoffs: scale-to-zero cold starts (a few seconds); rate limits are per instan
 | M6 | **Deploy** (Cloud Run + Neon) + seed demo | Public URL works | 1 day |
 | M7 | Eval harness + baseline report | Report committed, threshold calibrated | 1.5 days |
 | M8 | Hybrid retrieval + RRF | Before/after eval table committed | 1 day |
-| M9 | SSE streaming endpoint | Tokens stream in UI, citations arrive at end | 1 day |
-| M10 | Polish: README, diagram, ADRs, GIF, resume bullets | Recruiter-ready, pinned | 1 day |
+| M9 | SSE streaming endpoint (**deferred**: polish, not core value; the agentic project comes first) | Tokens stream in UI, citations arrive at end | 1 day |
+| M10 | Polish: README, diagram, PDF text repair, demo media, resume bullets | Recruiter-ready, pinned | 1 day |
 
 ~12 to 14 focused days. Deployed and usable by M6 (about day 8). After M6, the project is shippable; everything after strengthens it.
 
