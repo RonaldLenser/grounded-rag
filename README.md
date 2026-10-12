@@ -40,7 +40,7 @@ FastAPI · PostgreSQL + pgvector · SQLAlchemy 2.0 (async) + Alembic · Claude (
 - [x] M4: Cited answers with citation verification and refusals
 - [x] M5: Web UI
 - [x] M6: Deploy (Cloud Run + Neon, rate limits, daily LLM budget)
-- [ ] M7: Evaluation harness (harness + baseline done; judged results next)
+- [x] M7: Evaluation harness (33-question golden set, LLM judge, results below)
 - [ ] M8: Hybrid retrieval
 - [ ] M9: Streaming
 - [ ] M10: Docs and demo
@@ -127,8 +127,30 @@ uv run python -m evals.run https://<url> --judge --label my-run     # writes doc
 uv run python -m evals.run --from-json docs/evals/<run>.json --judge  # re-judge a saved run
 ```
 
-Reports: [docs/evals/](docs/evals/). The first run found a real bug (answers cut off at the
-output token cap) and showed every false refusal was a retrieval miss.
+**Results** ([full report](docs/evals/2026-10-12-v1.md), live demo, 2026-10-12, Claude Sonnet 5.5,
+judged by Claude Haiku 5.5):
+
+| What | Result |
+|---|---|
+| Answerable questions answered (not refused) | 22 / 24 |
+| Answers correct vs hand-written reference (LLM judge) | 22 / 22 |
+| Unanswerable on-topic questions refused | 6 / 6 |
+| Off-topic questions refused before any LLM call | 3 / 3 |
+| Shown claims fully supported by their quotes (LLM judge) | 72 / 78, none unsupported |
+| Answered questions citing an expected page | 22 / 22 |
+| Retrieval Hit@6 / MRR | 92% / 0.81 |
+| Latency p50 / p95 (LLM answers) | 2.9s / 6.5s |
+
+What the numbers say:
+- Both refusals of answerable questions were retrieval misses (the right page was not in the
+  top 6), not model errors. That is the measured case for hybrid retrieval (next milestone).
+- The 6 claims rated "partially supported" were checked by hand: the extra detail came from the
+  source document but outside the quoted span, or was attribution wording ("MANAGE 1.3
+  states..."). No fabricated fact was found.
+- The baseline run ([report](docs/evals/2026-10-12-baseline.md)) caught a real bug: claim-format
+  answers hit the 1024-token output cap and returned 502. Fixed (2048 cap, at most 8 claims).
+- Small sample (33 questions): one question is about 4 points. Treat it as a regression
+  check, not a benchmark.
 
 ### Privacy and data retention
 

@@ -71,6 +71,7 @@ def summarize(results: list[ItemResult]) -> dict[str, Any]:
         },
         "judge": {
             "claims_judged": len(judged_claims),
+            "judge_errors": sum(r.judge_error is not None for r in results),
             "claim_supported": _rate([j.verdict == "supported" for j in judged_claims]),
             "claim_not_supported": sum(j.verdict == "not_supported" for j in judged_claims),
             "answers_judged": len(judged_answers),
@@ -293,6 +294,7 @@ def _summary_rows(summary: dict[str, Any]) -> list[tuple[str, str, str]]:
             f"{_pct(jd['answer_correct'])} / {_pct(jd['answer_correct_or_partial'])} "
             f"of {jd['answers_judged']}",
         ),
+        ("Judge", "Questions the judge failed on (excluded above)", str(jd["judge_errors"])),
         ("Cost", "LLM calls", f"{cl['llm_calls']} of {c['total']} questions"),
         (
             "Latency",
@@ -315,6 +317,8 @@ def _problems(results: list[ItemResult]) -> list[str]:
         elif not m.status_ok(r):
             expected = ", ".join(r.item.acceptable_statuses)
             lines.append(f"- `{r.item.id}`: status `{r.status}`, expected one of: {expected}")
+        if r.judge_error:
+            lines.append(f"- `{r.item.id}`: judge failed (not counted): {r.judge_error}")
         if r.answer_judgment and r.answer_judgment.verdict != "correct":
             lines.append(
                 f"- `{r.item.id}`: answer {r.answer_judgment.verdict}: {r.answer_judgment.reason}"
