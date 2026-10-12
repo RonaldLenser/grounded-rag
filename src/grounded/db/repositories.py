@@ -7,7 +7,7 @@ Keeping queries in one place means one file to review for performance
 import uuid
 from collections.abc import Sequence
 
-from sqlalchemy import func, select
+from sqlalchemy import func, select, text
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from grounded.db.models import Chunk, Collection, Document
@@ -70,3 +70,41 @@ async def delete_document(session: AsyncSession, document: Document) -> None:
     # Chunks are removed by the database (ON DELETE CASCADE), not row by row in Python.
     await session.delete(document)
     await session.flush()
+
+
+# ----- Vector search -----
+async def search_chunks_by_vector(
+    session: AsyncSession,
+    collection_id: uuid.UUID,
+    query_vector: list[float],
+    top_k: int,
+    ef_search: int,
+) -> list[tuple[Chunk, str, float]]:
+    """Nearest chunks to `query_vector` within one collection, best first.
+
+    Returns (chunk, filename, cosine_similarity). Similarity = 1 - cosine distance:
+    1.0 = same direction (very similar meaning), ~0 = unrelated.
+    """
+    # These settings only last for this transaction, so they can't leak to other requests.
+    # ef_search: how many candidates the HNSW graph walk keeps (recall vs speed).
+    # set_config(..., is_local => true) is the parameterized form of SET LOCAL.
+    await session.execute(
+        text("SELECT set_config('hnsw.ef_search', :value, true)"), {"value": str(ef_search)}
+    )
+    # Iterative scan (pgvector >= 0.8): HNSW finds nearest neighbors across ALL
+    # collections first, then our WHERE filter removes other collections. Without
+    # this, a small collection could get fewer than top_k results. With it, the
+    # index keeps scanning until enough rows survive the filter.
+    await session.execute(text("SELECT set_config('hnsw.iterative_scan', 'strict_order', true)"))
+
+    distance = Chunk.embedding.cosine_distance(query_vector)
+    statement = (
+        select(Chunk, Document.filename, (1 - distance).label("similarity"))
+        .join(Document, Document.id == Chunk.document_id)
+        .where(Document.collection_id == collection_id)
+        # ORDER BY distance + LIMIT is the exact shape that lets Postgres use the HNSW index.
+        .order_by(distance)
+        .limit(top_k)
+    )
+    rows = await session.execute(statement)
+    return [(chunk, filename, float(similarity)) for chunk, filename, similarity in rows]

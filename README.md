@@ -24,7 +24,7 @@ FastAPI · PostgreSQL + pgvector · SQLAlchemy 2.0 (async) + Alembic · Claude (
 - [x] M0: Project scaffold, tooling, CI
 - [x] M1: Config, structured logging, database schema, migrations, Docker Compose
 - [x] M2: Document ingestion (parse, chunk, embed, store)
-- [ ] M3: Vector search
+- [x] M3: Vector search
 - [ ] M4: Cited answers with citation verification and refusals
 - [ ] M5: Web UI
 - [ ] M6: Deploy
@@ -60,7 +60,7 @@ uv run alembic upgrade head             # create/upgrade the schema
 uv run uvicorn grounded.main:create_app --factory --reload
 ```
 
-### Try ingestion
+### Try the API
 
 Set `OPENAI_API_KEY` and `ADMIN_API_KEY` in `.env`, start the app, then:
 
@@ -73,9 +73,25 @@ curl -X POST localhost:8000/v1/collections \
 # upload a document (PDF, .md, or .txt)
 curl -X POST localhost:8000/v1/collections/<collection-id>/documents \
   -H "X-API-Key: $ADMIN_API_KEY" -F "file=@policy.pdf"
+
+# search: the most relevant chunks for a question (no admin key needed)
+curl -X POST localhost:8000/v1/collections/<collection-id>/search \
+  -H "Content-Type: application/json" \
+  -d '{"query": "What does the policy say about accountability?", "top_k": 3}'
 ```
 
 Or use the interactive docs at http://localhost:8000/docs (click **Authorize** and paste the admin key).
+
+### Smoke test
+
+With the app running (`docker compose up --build -d`), run the end-to-end check against
+real OpenAI embeddings:
+
+```bash
+uv run python scripts/smoke_test.py                  # local
+uv run python scripts/smoke_test.py https://<url>    # a deployed instance
+```
+
 
 ### Tests
 
