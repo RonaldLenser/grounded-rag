@@ -11,6 +11,7 @@
 .pytest_cache/
 .mypy_cache/
 .ruff_cache/
-evals/corpus/
+# Eval harness and its corpus are not needed in the image.
+evals/
 tests/
 docs/
