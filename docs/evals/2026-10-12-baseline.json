@@ -1,0 +1,3929 @@
+{
+  "meta": {
+    "label": "baseline",
+    "date": "2026-10-12 16:51 UTC",
+    "target": "https://grounded-1004795551444.us-east4.run.app",
+    "collection": "nist-ai-rmf",
+    "commit": "ecd136d",
+    "judge_model": null,
+    "notes": "Pre-fix baseline (MIN_RELEVANCE_SCORE=0.20, LLM_MAX_TOKENS=1024). Judge not run. Found: 1 answer cut off at the 1024-token output cap (502), fixed in this PR."
+  },
+  "summary": {
+    "counts": {
+      "total": 33,
+      "errors": 1,
+      "answerable": 24,
+      "unanswerable": 6,
+      "out_of_domain": 3
+    },
+    "retrieval": {
+      "hit_at_1": 0.75,
+      "hit_at_3": 0.875,
+      "hit_at_6": 0.9166666666666666,
+      "mrr": 0.8069444444444445,
+      "multi_source_full_coverage": 0.6666666666666666
+    },
+    "answers": {
+      "status_accuracy": 0.9090909090909091,
+      "answerable_answered": 0.875,
+      "false_refusals": 2,
+      "false_refusals_retrieval_miss": 2,
+      "answerable_fully_answered": 0.875,
+      "unanswerable_refused_ok": 1.0,
+      "unanswerable_strict_refusal": 1.0,
+      "out_of_domain_gate_refused": 1.0,
+      "citation_page_hit": 1.0
+    },
+    "verifier": {
+      "claims_proposed": 56,
+      "claims_shown": 56,
+      "claims_dropped": 0,
+      "drop_rate": 0.0,
+      "downgraded": 0
+    },
+    "judge": {
+      "claims_judged": 0,
+      "claim_supported": null,
+      "claim_not_supported": 0,
+      "answers_judged": 0,
+      "answer_correct": null,
+      "answer_correct_or_partial": null
+    },
+    "cost_latency": {
+      "llm_calls": 29,
+      "latency_p50_ms": 3141,
+      "latency_p95_ms": 5632,
+      "avg_input_tokens": 5683.827586206897,
+      "avg_output_tokens": 279.7241379310345
+    },
+    "gate": {
+      "answerable_top_scores": [
+        0.3105525318357074,
+        0.6207455349399487,
+        0.7741575444861105
+      ],
+      "unanswerable_top_scores": [
+        0.3972991907036103,
+        0.5112481370486337,
+        0.6250108422170958
+      ],
+      "out_of_domain_top_scores": [
+        0.06639359732620842,
+        0.09626276077054075,
+        0.13618056991428107
+      ],
+      "sweep": [
+        {
+          "threshold": 0.1,
+          "answerable_blocked": 0,
+          "answerable_total": 23,
+          "refusable_blocked": 2,
+          "refusable_total": 9
+        },
+        {
+          "threshold": 0.15,
+          "answerable_blocked": 0,
+          "answerable_total": 23,
+          "refusable_blocked": 3,
+          "refusable_total": 9
+        },
+        {
+          "threshold": 0.2,
+          "answerable_blocked": 0,
+          "answerable_total": 23,
+          "refusable_blocked": 3,
+          "refusable_total": 9
+        },
+        {
+          "threshold": 0.25,
+          "answerable_blocked": 0,
+          "answerable_total": 23,
+          "refusable_blocked": 3,
+          "refusable_total": 9
+        },
+        {
+          "threshold": 0.3,
+          "answerable_blocked": 0,
+          "answerable_total": 23,
+          "refusable_blocked": 3,
+          "refusable_total": 9
+        },
+        {
+          "threshold": 0.35,
+          "answerable_blocked": 1,
+          "answerable_total": 23,
+          "refusable_blocked": 3,
+          "refusable_total": 9
+        },
+        {
+          "threshold": 0.4,
+          "answerable_blocked": 3,
+          "answerable_total": 23,
+          "refusable_blocked": 4,
+          "refusable_total": 9
+        },
+        {
+          "threshold": 0.45,
+          "answerable_blocked": 3,
+          "answerable_total": 23,
+          "refusable_blocked": 4,
+          "refusable_total": 9
+        },
+        {
+          "threshold": 0.5,
+          "answerable_blocked": 3,
+          "answerable_total": 23,
+          "refusable_blocked": 5,
+          "refusable_total": 9
+        }
+      ],
+      "recommended_threshold": 0.2
+    },
+    "models": [
+      "claude-sonnet-5-5"
+    ]
+  },
+  "results": [
+    {
+      "item": {
+        "id": "rmf-core-functions",
+        "category": "answerable",
+        "question": "What are the four functions of the AI RMF Core?",
+        "expected_sources": [
+          {
+            "file": "nist-ai-rmf-1.0.pdf",
+            "pages": [
+              8,
+              25
+            ]
+          }
+        ],
+        "reference_answer": "GOVERN, MAP, MEASURE, and MANAGE.",
+        "acceptable_statuses": [
+          "answered",
+          "partial"
+        ]
+      },
+      "search_hits": [
+        {
+          "filename": "nist-ai-rmf-1.0.pdf",
+          "page_start": 24,
+          "page_end": 26,
+          "score": 0.6875631080878314
+        },
+        {
+          "filename": "nist-ai-rmf-1.0.pdf",
+          "page_start": 46,
+          "page_end": 47,
+          "score": 0.6569172383462457
+        },
+        {
+          "filename": "nist-ai-rmf-1.0.pdf",
+          "page_start": 26,
+          "page_end": 27,
+          "score": 0.6236607590393674
+        },
+        {
+          "filename": "nist-ai-rmf-1.0.pdf",
+          "page_start": 7,
+          "page_end": 8,
+          "score": 0.6081601999056309
+        },
+        {
+          "filename": "nist-ai-rmf-1.0.pdf",
+          "page_start": 3,
+          "page_end": 5,
+          "score": 0.6044027072042424
+        },
+        {
+          "filename": "nist-ai-rmf-1.0.pdf",
+          "page_start": 8,
+          "page_end": 9,
+          "score": 0.5999967239727447
+        }
+      ],
+      "response": {
+        "query_id": "987f6f4a-9c53-4cf4-85d2-93f9d61b491b",
+        "status": "answered",
+        "answer": "The AI RMF Core is composed of four functions: GOVERN, MAP, MEASURE, and MANAGE [S1][S4]. GOVERN applies to all stages of an organization's AI risk management processes, while MAP, MEASURE, and MANAGE can be applied in AI system-specific contexts and at specific lifecycle stages [S6].",
+        "notice": null,
+        "claims": [
+          {
+            "text": "The AI RMF Core is composed of four functions: GOVERN, MAP, MEASURE, and MANAGE.",
+            "source_ids": [
+              "S1",
+              "S4"
+            ]
+          },
+          {
+            "text": "GOVERN applies to all stages of an organization's AI risk management processes, while MAP, MEASURE, and MANAGE can be applied in AI system-specific contexts and at specific lifecycle stages.",
+            "source_ids": [
+              "S6"
+            ]
+          }
+        ],
+        "citations": [
+          {
+            "source_id": "S1",
+            "quote": "As illus- trated in Figure 5, the Core is composed of four functions: GOVERN , MAP, MEASURE , and MANAGE",
+            "document_id": "8c776c92-260f-4edf-acf3-6a70e3f0465f",
+            "chunk_id": "7cc25852-f1af-41df-b53e-cf7235e6a01b",
+            "filename": "nist-ai-rmf-1.0.pdf",
+            "page_start": 24,
+            "page_end": 26,
+            "heading": null
+          },
+          {
+            "source_id": "S4",
+            "quote": "These functions \u2013 GOVERN , MAP, MEASURE , and MANAGE \u2013 are broken down further into categories and subcate- gories",
+            "document_id": "8c776c92-260f-4edf-acf3-6a70e3f0465f",
+            "chunk_id": "2bb82f49-034c-45fb-a81d-5ba94fc419fc",
+            "filename": "nist-ai-rmf-1.0.pdf",
+            "page_start": 7,
+            "page_end": 8,
+            "heading": null
+          },
+          {
+            "source_id": "S6",
+            "quote": "While GOVERN applies to all stages of organizations\u2019 AI risk management pro- cesses and procedures, the MAP, MEASURE , and MANAGE functions can be applied in AI system-specific contexts and at specific stages of the AI lifecycle",
+            "document_id": "8c776c92-260f-4edf-acf3-6a70e3f0465f",
+            "chunk_id": "b18418e3-0245-4361-bb68-d2522daa022c",
+            "filename": "nist-ai-rmf-1.0.pdf",
+            "page_start": 8,
+            "page_end": 9,
+            "heading": null
+          }
+        ],
+        "retrieval": {
+          "chunks_retrieved": 6,
+          "top_score": 0.6875631080878314
+        },
+        "verification": {
+          "claims_supported": 2,
+          "claims_rejected": 0,
+          "citations_verified": 3,
+          "citations_rejected": 0,
+          "downgraded_from": null
+        },
+        "usage": {
+          "llm_called": true,
+          "model": "claude-sonnet-5-5",
+          "input_tokens": 5783,
+          "output_tokens": 367
+        },
+        "latency_ms": 4236
+      },
+      "error": null,
+      "claim_judgments": [],
+      "answer_judgment": null
+    },
+    {
+      "item": {
+        "id": "rmf-trustworthy-characteristics",
+        "category": "answerable",
+        "question": "What are the characteristics of trustworthy AI systems according to the AI RMF?",
+        "expected_sources": [
+          {
+            "file": "nist-ai-rmf-1.0.pdf",
+            "pages": [
+              8,
+              17
+            ]
+          }
+        ],
+        "reference_answer": "Valid and reliable; safe; secure and resilient; accountable and transparent; explainable and interpretable; privacy-enhanced; and fair with harmful bias managed.",
+        "acceptable_statuses": [
+          "answered",
+          "partial"
+        ]
+      },
+      "search_hits": [
+        {
+          "filename": "nist-ai-rmf-1.0.pdf",
+          "page_start": 15,
+          "page_end": 17,
+          "score": 0.7741575444861105
+        },
+        {
+          "filename": "nist-ai-rmf-1.0.pdf",
+          "page_start": 17,
+          "page_end": 18,
+          "score": 0.6868520330674714
+        },
+        {
+          "filename": "nist-ai-rmf-1.0.pdf",
+          "page_start": 18,
+          "page_end": 19,
+          "score": 0.6732590127751084
+        },
+        {
+          "filename": "nist-ai-rmf-1.0.pdf",
+          "page_start": 7,
+          "page_end": 8,
+          "score": 0.6679782159996676
+        },
+        {
+          "filename": "nist-ai-rmf-1.0.pdf",
+          "page_start": 6,
+          "page_end": 7,
+          "score": 0.6659222774144251
+        },
+        {
+          "filename": "nist-ai-rmf-1.0.pdf",
+          "page_start": 46,
+          "page_end": 47,
+          "score": 0.6657748917053489
+        }
+      ],
+      "response": {
+        "query_id": "692b1b67-fcc2-4e69-a991-8680ac0b55bd",
+        "status": "answered",
+        "answer": "The AI RMF lists the characteristics of trustworthy AI systems as valid and reliable, safe, secure and resilient, accountable and transparent, explainable and interpretable, privacy-enhanced, and fair with harmful bias managed [S1]. Valid and reliable is a necessary condition of trustworthiness and forms the base for the other characteristics [S1]. Accountable and transparent relates to all the other characteristics [S1]. Creating trustworthy AI requires balancing these characteristics based on the AI system's context of use [S1].",
+        "notice": null,
+        "claims": [
+          {
+            "text": "The AI RMF lists the characteristics of trustworthy AI systems as valid and reliable, safe, secure and resilient, accountable and transparent, explainable and interpretable, privacy-enhanced, and fair with harmful bias managed.",
+            "source_ids": [
+              "S1"
+            ]
+          },
+          {
+            "text": "Valid and reliable is a necessary condition of trustworthiness and forms the base for the other characteristics.",
+            "source_ids": [
+              "S1"
+            ]
+          },
+          {
+            "text": "Accountable and transparent relates to all the other characteristics.",
+            "source_ids": [
+              "S1"
+            ]
+          },
+          {
+            "text": "Creating trustworthy AI requires balancing these characteristics based on the AI system's context of use.",
+            "source_ids": [
+              "S1"
+            ]
+          }
+        ],
+        "citations": [
+          {
+            "source_id": "S1",
+            "quote": "Characteristics of trustworthy AI systems include: valid and reliable, safe, secure and resilient, accountable and trans- parent, explainable and interpretable, privacy-enhanced, and fair with harmful bias managed",
+            "document_id": "8c776c92-260f-4edf-acf3-6a70e3f0465f",
+            "chunk_id": "f568b62c-eb9f-4840-90d1-6071c97c8145",
+            "filename": "nist-ai-rmf-1.0.pdf",
+            "page_start": 15,
+            "page_end": 17,
+            "heading": null
+          },
+          {
+            "source_id": "S1",
+            "quote": "Valid &amp; Reliable is a necessary condition of trustworthiness and is shown as the base for other trustworthiness characteristics",
+            "document_id": "8c776c92-260f-4edf-acf3-6a70e3f0465f",
+            "chunk_id": "f568b62c-eb9f-4840-90d1-6071c97c8145",
+            "filename": "nist-ai-rmf-1.0.pdf",
+            "page_start": 15,
+            "page_end": 17,
+            "heading": null
+          },
+          {
+            "source_id": "S1",
+            "quote": "Accountable &amp; Transparent is shown as a vertical box because it relates to all other characteristics",
+            "document_id": "8c776c92-260f-4edf-acf3-6a70e3f0465f",
+            "chunk_id": "f568b62c-eb9f-4840-90d1-6071c97c8145",
+            "filename": "nist-ai-rmf-1.0.pdf",
+            "page_start": 15,
+            "page_end": 17,
+            "heading": null
+          },
+          {
+            "source_id": "S1",
+            "quote": "Creating trustworthy AI requires balancing each of these characteristics based on the AI system\u2019s context of use",
+            "document_id": "8c776c92-260f-4edf-acf3-6a70e3f0465f",
+            "chunk_id": "f568b62c-eb9f-4840-90d1-6071c97c8145",
+            "filename": "nist-ai-rmf-1.0.pdf",
+            "page_start": 15,
+            "page_end": 17,
+            "heading": null
+          }
+        ],
+        "retrieval": {
+          "chunks_retrieved": 6,
+          "top_score": 0.7741568515604491
+        },
+        "verification": {
+          "claims_supported": 4,
+          "claims_rejected": 0,
+          "citations_verified": 4,
+          "citations_rejected": 0,
+          "downgraded_from": null
+        },
+        "usage": {
+          "llm_called": true,
+          "model": "claude-sonnet-5-5",
+          "input_tokens": 5646,
+          "output_tokens": 477
+        },
+        "latency_ms": 4473
+      },
+      "error": null,
+      "claim_judgments": [],
+      "answer_judgment": null
+    },
+    {
+      "item": {
+        "id": "rmf-base-characteristic",
+        "category": "answerable",
+        "question": "Which trustworthiness characteristic is a necessary condition of trustworthiness and shown as the base for the others?",
+        "expected_sources": [
+          {
+            "file": "nist-ai-rmf-1.0.pdf",
+            "pages": [
+              17
+            ]
+          }
+        ],
+        "reference_answer": "Valid and reliable.",
+        "acceptable_statuses": [
+          "answered",
+          "partial"
+        ]
+      },
+      "search_hits": [
+        {
+          "filename": "nist-ai-rmf-1.0.pdf",
+          "page_start": 17,
+          "page_end": 18,
+          "score": 0.5795835269764531
+        },
+        {
+          "filename": "nist-ai-rmf-1.0.pdf",
+          "page_start": 18,
+          "page_end": 18,
+          "score": 0.5079930457796731
+        },
+        {
+          "filename": "nist-ai-rmf-1.0.pdf",
+          "page_start": 15,
+          "page_end": 17,
+          "score": 0.46808031372946346
+        },
+        {
+          "filename": "nist-ai-rmf-1.0.pdf",
+          "page_start": 18,
+          "page_end": 19,
+          "score": 0.41900379482209626
+        },
+        {
+          "filename": "nist-ai-rmf-1.0.pdf",
+          "page_start": 20,
+          "page_end": 21,
+          "score": 0.3892984392729202
+        },
+        {
+          "filename": "nist-ai-rmf-1.0.pdf",
+          "page_start": 23,
+          "page_end": 25,
+          "score": 0.35529038880403085
+        }
+      ],
+      "response": {
+        "query_id": "e519a837-a224-4fbf-ae0c-02c9feba59f1",
+        "status": "answered",
+        "answer": "Valid and Reliable is the trustworthiness characteristic that is a necessary condition of trustworthiness and is shown as the base for the other characteristics [S3].",
+        "notice": null,
+        "claims": [
+          {
+            "text": "Valid and Reliable is the trustworthiness characteristic that is a necessary condition of trustworthiness and is shown as the base for the other characteristics.",
+            "source_ids": [
+              "S3"
+            ]
+          }
+        ],
+        "citations": [
+          {
+            "source_id": "S3",
+            "quote": "Valid &amp; Reliable is a necessary condition of trustworthiness and is shown as the base for other trustworthiness characteristics",
+            "document_id": "8c776c92-260f-4edf-acf3-6a70e3f0465f",
+            "chunk_id": "f568b62c-eb9f-4840-90d1-6071c97c8145",
+            "filename": "nist-ai-rmf-1.0.pdf",
+            "page_start": 15,
+            "page_end": 17,
+            "heading": null
+          }
+        ],
+        "retrieval": {
+          "chunks_retrieved": 6,
+          "top_score": 0.5795835269764531
+        },
+        "verification": {
+          "claims_supported": 1,
+          "claims_rejected": 0,
+          "citations_verified": 1,
+          "citations_rejected": 0,
+          "downgraded_from": null
+        },
+        "usage": {
+          "llm_called": true,
+          "model": "claude-sonnet-5-5",
+          "input_tokens": 5793,
+          "output_tokens": 139
+        },
+        "latency_ms": 1984
+      },
+      "error": null,
+      "claim_judgments": [],
+      "answer_judgment": null
+    },
+    {
+      "item": {
+        "id": "rmf-risk-tolerance",
+        "category": "answerable",
+        "question": "What is risk tolerance, and does the AI RMF prescribe it?",
+        "expected_sources": [
+          {
+            "file": "nist-ai-rmf-1.0.pdf",
+            "pages": [
+              12
+            ]
+          }
+        ],
+        "reference_answer": "Risk tolerance is the organization's or AI actor's readiness to bear risk in order to achieve its objectives. The AI RMF can be used to prioritize risk but does not prescribe risk tolerance.",
+        "acceptable_statuses": [
+          "answered",
+          "partial"
+        ]
+      },
+      "search_hits": [
+        {
+          "filename": "nist-ai-rmf-1.0.pdf",
+          "page_start": 11,
+          "page_end": 12,
+          "score": 0.7175345843201613
+        },
+        {
+          "filename": "nist-ai-rmf-1.0.pdf",
+          "page_start": 12,
+          "page_end": 13,
+          "score": 0.6367623783096691
+        },
+        {
+          "filename": "nist-ai-rmf-1.0.pdf",
+          "page_start": 47,
+          "page_end": 48,
+          "score": 0.6064540692624967
+        },
+        {
+          "filename": "nist-ai-rmf-1.0.pdf",
+          "page_start": 3,
+          "page_end": 5,
+          "score": 0.5763863068792489
+        },
+        {
+          "filename": "nist-ai-rmf-1.0.pdf",
+          "page_start": 13,
+          "page_end": 14,
+          "score": 0.5727387798258664
+        },
+        {
+          "filename": "nist-ai-rmf-1.0.pdf",
+          "page_start": 37,
+          "page_end": 38,
+          "score": 0.5651439821538872
+        }
+      ],
+      "response": {
+        "query_id": "3fdc8897-fb35-4267-8ca2-8c84c0ee7842",
+        "status": "answered",
+        "answer": "Risk tolerance refers to the organization's or AI actor's readiness to bear risk in order to achieve its objectives [S1]. The AI RMF does not prescribe risk tolerance, although it can be used to prioritize risk [S1]. Where established guidelines do not exist, organizations should define reasonable risk tolerance, after which the AI RMF can be used to manage risks and document risk management processes [S2].",
+        "notice": null,
+        "claims": [
+          {
+            "text": "Risk tolerance refers to the organization's or AI actor's readiness to bear risk in order to achieve its objectives.",
+            "source_ids": [
+              "S1"
+            ]
+          },
+          {
+            "text": "The AI RMF does not prescribe risk tolerance, although it can be used to prioritize risk.",
+            "source_ids": [
+              "S1"
+            ]
+          },
+          {
+            "text": "Where established guidelines do not exist, organizations should define reasonable risk tolerance, after which the AI RMF can be used to manage risks and document risk management processes.",
+            "source_ids": [
+              "S2"
+            ]
+          }
+        ],
+        "citations": [
+          {
+            "source_id": "S1",
+            "quote": "Risk tolerance refers to the organization\u2019s or AI actor\u2019s (see Appendix A) readiness to bear the risk in order to achieve its objectives",
+            "document_id": "8c776c92-260f-4edf-acf3-6a70e3f0465f",
+            "chunk_id": "0b31f8b4-ad75-4a39-b630-4766990b78e0",
+            "filename": "nist-ai-rmf-1.0.pdf",
+            "page_start": 11,
+            "page_end": 12,
+            "heading": null
+          },
+          {
+            "source_id": "S1",
+            "quote": "While the AI RMF can be used to prioritize risk, it does not prescribe risk tolerance",
+            "document_id": "8c776c92-260f-4edf-acf3-6a70e3f0465f",
+            "chunk_id": "0b31f8b4-ad75-4a39-b630-4766990b78e0",
+            "filename": "nist-ai-rmf-1.0.pdf",
+            "page_start": 11,
+            "page_end": 12,
+            "heading": null
+          },
+          {
+            "source_id": "S2",
+            "quote": "Where established guidelines do not exist, organizations should define reasonable risk tolerance. Once tolerance is defined, this AI RMF can be used to manage risks and to document risk management processes",
+            "document_id": "8c776c92-260f-4edf-acf3-6a70e3f0465f",
+            "chunk_id": "537161c7-e6e7-4e6f-9fb9-c2bc20962a87",
+            "filename": "nist-ai-rmf-1.0.pdf",
+            "page_start": 12,
+            "page_end": 13,
+            "heading": null
+          }
+        ],
+        "retrieval": {
+          "chunks_retrieved": 6,
+          "top_score": 0.7175345843201613
+        },
+        "verification": {
+          "claims_supported": 3,
+          "claims_rejected": 0,
+          "citations_verified": 3,
+          "citations_rejected": 0,
+          "downgraded_from": null
+        },
+        "usage": {
+          "llm_called": true,
+          "model": "claude-sonnet-5-5",
+          "input_tokens": 5777,
+          "output_tokens": 366
+        },
+        "latency_ms": 4246
+      },
+      "error": null,
+      "claim_judgments": [],
+      "answer_judgment": null
+    },
+    {
+      "item": {
+        "id": "rmf-eliminate-risk",
+        "category": "answerable",
+        "question": "Why can trying to eliminate negative AI risk entirely be counterproductive?",
+        "expected_sources": [
+          {
+            "file": "nist-ai-rmf-1.0.pdf",
+            "pages": [
+              12
+            ]
+          }
+        ],
+        "reference_answer": "Not all incidents and failures can be eliminated; unrealistic expectations can lead to inefficient or impractical risk triage and wasted resources.",
+        "acceptable_statuses": [
+          "answered",
+          "partial"
+        ]
+      },
+      "search_hits": [
+        {
+          "filename": "nist-ai-rmf-1.0.pdf",
+          "page_start": 42,
+          "page_end": 43,
+          "score": 0.5894207674881217
+        },
+        {
+          "filename": "nist-ai-rmf-1.0.pdf",
+          "page_start": 6,
+          "page_end": 6,
+          "score": 0.5868436329037953
+        },
+        {
+          "filename": "nist-ai-rmf-1.0.pdf",
+          "page_start": 9,
+          "page_end": 9,
+          "score": 0.5794274475055462
+        },
+        {
+          "filename": "nist-ai-rmf-1.0.pdf",
+          "page_start": 9,
+          "page_end": 11,
+          "score": 0.5730605786071205
+        },
+        {
+          "filename": "nist-ai-rmf-1.0.pdf",
+          "page_start": 10,
+          "page_end": 11,
+          "score": 0.570951340157863
+        },
+        {
+          "filename": "nist-ai-rmf-1.0.pdf",
+          "page_start": 13,
+          "page_end": 13,
+          "score": 0.5638314805266471
+        }
+      ],
+      "response": {
+        "query_id": "40890f2b-4ba6-4e72-8440-d238b5d06fc5",
+        "status": "insufficient_context",
+        "answer": "I couldn't find information about that in the provided documents.",
+        "notice": null,
+        "claims": [],
+        "citations": [],
+        "retrieval": {
+          "chunks_retrieved": 6,
+          "top_score": 0.5894207674881217
+        },
+        "verification": {
+          "claims_supported": 0,
+          "claims_rejected": 0,
+          "citations_verified": 0,
+          "citations_rejected": 0,
+          "downgraded_from": null
+        },
+        "usage": {
+          "llm_called": true,
+          "model": "claude-sonnet-5-5",
+          "input_tokens": 5630,
+          "output_tokens": 232
+        },
+        "latency_ms": 3552
+      },
+      "error": null,
+      "claim_judgments": [],
+      "answer_judgment": null
+    },
+    {
+      "item": {
+        "id": "rmf-bias-categories",
+        "category": "answerable",
+        "question": "What are the three major categories of AI bias identified by NIST?",
+        "expected_sources": [
+          {
+            "file": "nist-ai-rmf-1.0.pdf",
+            "pages": [
+              23
+            ]
+          }
+        ],
+        "reference_answer": "Systemic, computational and statistical, and human-cognitive.",
+        "acceptable_statuses": [
+          "answered",
+          "partial"
+        ]
+      },
+      "search_hits": [
+        {
+          "filename": "nist-ai-rmf-1.0.pdf",
+          "page_start": 22,
+          "page_end": 23,
+          "score": 0.717107816339797
+        },
+        {
+          "filename": "nist-ai-600-1-genai-profile.pdf",
+          "page_start": 60,
+          "page_end": 60,
+          "score": 0.6189580303139179
+        },
+        {
+          "filename": "nist-ai-rmf-1.0.pdf",
+          "page_start": 23,
+          "page_end": 25,
+          "score": 0.6170447016752952
+        },
+        {
+          "filename": "nist-ai-600-1-genai-profile.pdf",
+          "page_start": 60,
+          "page_end": 61,
+          "score": 0.6086534090722463
+        },
+        {
+          "filename": "nist-ai-rmf-1.0.pdf",
+          "page_start": 42,
+          "page_end": 43,
+          "score": 0.5969460083814361
+        },
+        {
+          "filename": "nist-ai-600-1-genai-profile.pdf",
+          "page_start": 7,
+          "page_end": 8,
+          "score": 0.589228201804143
+        }
+      ],
+      "response": {
+        "query_id": "12241bff-adb5-41f9-9676-10864556eff9",
+        "status": "answered",
+        "answer": "NIST has identified three major categories of AI bias: systemic, computational and statistical, and human-cognitive [S1]. Systemic bias can be present in AI datasets, organizational norms, practices, and processes across the AI lifecycle, and the broader society that uses AI systems [S1]. Computational and statistical biases often stem from systematic errors due to non-representative samples [S1]. Human-cognitive biases relate to how an individual or group perceives AI system information to make a decision or fill in missing information [S1].",
+        "notice": null,
+        "claims": [
+          {
+            "text": "NIST has identified three major categories of AI bias: systemic, computational and statistical, and human-cognitive.",
+            "source_ids": [
+              "S1"
+            ]
+          },
+          {
+            "text": "Systemic bias can be present in AI datasets, organizational norms, practices, and processes across the AI lifecycle, and the broader society that uses AI systems.",
+            "source_ids": [
+              "S1"
+            ]
+          },
+          {
+            "text": "Computational and statistical biases often stem from systematic errors due to non-representative samples.",
+            "source_ids": [
+              "S1"
+            ]
+          },
+          {
+            "text": "Human-cognitive biases relate to how an individual or group perceives AI system information to make a decision or fill in missing information.",
+            "source_ids": [
+              "S1"
+            ]
+          }
+        ],
+        "citations": [
+          {
+            "source_id": "S1",
+            "quote": "NIST has identified three major categories of AI bias to be considered and managed: systemic, computational and statistical, and human-cognitive",
+            "document_id": "8c776c92-260f-4edf-acf3-6a70e3f0465f",
+            "chunk_id": "282e84da-15a3-4466-be6a-a8552d236a00",
+            "filename": "nist-ai-rmf-1.0.pdf",
+            "page_start": 22,
+            "page_end": 23,
+            "heading": null
+          },
+          {
+            "source_id": "S1",
+            "quote": "Systemic bias can be present in AI datasets, the orga- nizational norms, practices, and processes across the AI lifecycle, and the broader society that uses AI systems",
+            "document_id": "8c776c92-260f-4edf-acf3-6a70e3f0465f",
+            "chunk_id": "282e84da-15a3-4466-be6a-a8552d236a00",
+            "filename": "nist-ai-rmf-1.0.pdf",
+            "page_start": 22,
+            "page_end": 23,
+            "heading": null
+          },
+          {
+            "source_id": "S1",
+            "quote": "Computational and statistical biases can be present in AI datasets and algorithmic processes, and often stem from systematic errors due to non-representative samples",
+            "document_id": "8c776c92-260f-4edf-acf3-6a70e3f0465f",
+            "chunk_id": "282e84da-15a3-4466-be6a-a8552d236a00",
+            "filename": "nist-ai-rmf-1.0.pdf",
+            "page_start": 22,
+            "page_end": 23,
+            "heading": null
+          },
+          {
+            "source_id": "S1",
+            "quote": "Human-cognitive biases relate to how an individual or group perceives AI sys- tem information to make a decision or fill in missing information",
+            "document_id": "8c776c92-260f-4edf-acf3-6a70e3f0465f",
+            "chunk_id": "282e84da-15a3-4466-be6a-a8552d236a00",
+            "filename": "nist-ai-rmf-1.0.pdf",
+            "page_start": 22,
+            "page_end": 23,
+            "heading": null
+          }
+        ],
+        "retrieval": {
+          "chunks_retrieved": 6,
+          "top_score": 0.717107816339797
+        },
+        "verification": {
+          "claims_supported": 4,
+          "claims_rejected": 0,
+          "citations_verified": 4,
+          "citations_rejected": 0,
+          "downgraded_from": null
+        },
+        "usage": {
+          "llm_called": true,
+          "model": "claude-sonnet-5-5",
+          "input_tokens": 5812,
+          "output_tokens": 464
+        },
+        "latency_ms": 3723
+      },
+      "error": null,
+      "claim_judgments": [],
+      "answer_judgment": null
+    },
+    {
+      "item": {
+        "id": "rmf-robustness-definition",
+        "category": "answerable",
+        "question": "How does the AI RMF define robustness?",
+        "expected_sources": [
+          {
+            "file": "nist-ai-rmf-1.0.pdf",
+            "pages": [
+              19
+            ]
+          }
+        ],
+        "reference_answer": "The ability of a system to maintain its level of performance under a variety of circumstances (ISO/IEC TS 5723:2022).",
+        "acceptable_statuses": [
+          "answered",
+          "partial"
+        ]
+      },
+      "search_hits": [
+        {
+          "filename": "nist-ai-rmf-1.0.pdf",
+          "page_start": 18,
+          "page_end": 19,
+          "score": 0.6225860256341822
+        },
+        {
+          "filename": "nist-ai-rmf-1.0.pdf",
+          "page_start": 46,
+          "page_end": 47,
+          "score": 0.5793646608516793
+        },
+        {
+          "filename": "nist-ai-rmf-1.0.pdf",
+          "page_start": 15,
+          "page_end": 17,
+          "score": 0.5742917324199548
+        },
+        {
+          "filename": "nist-ai-rmf-1.0.pdf",
+          "page_start": 43,
+          "page_end": 44,
+          "score": 0.5712799749649113
+        },
+        {
+          "filename": "nist-ai-rmf-1.0.pdf",
+          "page_start": 24,
+          "page_end": 26,
+          "score": 0.5669482564638273
+        },
+        {
+          "filename": "nist-ai-rmf-1.0.pdf",
+          "page_start": 47,
+          "page_end": 48,
+          "score": 0.5578216186342773
+        }
+      ],
+      "response": {
+        "query_id": "08aaffda-67ad-4801-b127-c3a3af00e0b9",
+        "status": "answered",
+        "answer": "The AI RMF defines robustness or generalizability as the ability of a system to maintain its level of performance under a variety of circumstances, citing ISO/IEC TS 5723:2022 [S1]. Robustness is a goal for appropriate system functionality in a broad set of conditions and circumstances, including uses of AI systems not initially anticipated [S1]. Robustness requires that a system minimize potential harms to people if it is operating in an unexpected setting, in addition to performing as it does under expected uses [S1].",
+        "notice": null,
+        "claims": [
+          {
+            "text": "The AI RMF defines robustness or generalizability as the ability of a system to maintain its level of performance under a variety of circumstances, citing ISO/IEC TS 5723:2022.",
+            "source_ids": [
+              "S1"
+            ]
+          },
+          {
+            "text": "Robustness is a goal for appropriate system functionality in a broad set of conditions and circumstances, including uses of AI systems not initially anticipated.",
+            "source_ids": [
+              "S1"
+            ]
+          },
+          {
+            "text": "Robustness requires that a system minimize potential harms to people if it is operating in an unexpected setting, in addition to performing as it does under expected uses.",
+            "source_ids": [
+              "S1"
+            ]
+          }
+        ],
+        "citations": [
+          {
+            "source_id": "S1",
+            "quote": "Robustness or generalizability is defined as the \u201cability of a system to maintain its level of performance under a variety of circumstances\u201d (Source: ISO /IEC TS 5723:2022)",
+            "document_id": "8c776c92-260f-4edf-acf3-6a70e3f0465f",
+            "chunk_id": "ad011001-1a5e-444c-9720-00e361b833f3",
+            "filename": "nist-ai-rmf-1.0.pdf",
+            "page_start": 18,
+            "page_end": 19,
+            "heading": null
+          },
+          {
+            "source_id": "S1",
+            "quote": "Ro- bustness is a goal for appropriate system functionality in a broad set of conditions and circumstances, including uses of AI systems not initially anticipated",
+            "document_id": "8c776c92-260f-4edf-acf3-6a70e3f0465f",
+            "chunk_id": "ad011001-1a5e-444c-9720-00e361b833f3",
+            "filename": "nist-ai-rmf-1.0.pdf",
+            "page_start": 18,
+            "page_end": 19,
+            "heading": null
+          },
+          {
+            "source_id": "S1",
+            "quote": "it should perform in ways that minimize potential harms to people if it is operating in an unexpected setting",
+            "document_id": "8c776c92-260f-4edf-acf3-6a70e3f0465f",
+            "chunk_id": "ad011001-1a5e-444c-9720-00e361b833f3",
+            "filename": "nist-ai-rmf-1.0.pdf",
+            "page_start": 18,
+            "page_end": 19,
+            "heading": null
+          }
+        ],
+        "retrieval": {
+          "chunks_retrieved": 6,
+          "top_score": 0.6226550988455488
+        },
+        "verification": {
+          "claims_supported": 3,
+          "claims_rejected": 0,
+          "citations_verified": 3,
+          "citations_rejected": 0,
+          "downgraded_from": null
+        },
+        "usage": {
+          "llm_called": true,
+          "model": "claude-sonnet-5-5",
+          "input_tokens": 5560,
+          "output_tokens": 397
+        },
+        "latency_ms": 3434
+      },
+      "error": null,
+      "claim_judgments": [],
+      "answer_judgment": null
+    },
+    {
+      "item": {
+        "id": "rmf-accuracy-definition",
+        "category": "answerable",
+        "question": "How is accuracy defined in the AI RMF?",
+        "expected_sources": [
+          {
+            "file": "nist-ai-rmf-1.0.pdf",
+            "pages": [
+              19
+            ]
+          }
+        ],
+        "reference_answer": "Closeness of results of observations, computations, or estimates to the true values or the values accepted as being true (ISO/IEC TS 5723:2022).",
+        "acceptable_statuses": [
+          "answered",
+          "partial"
+        ]
+      },
+      "search_hits": [
+        {
+          "filename": "nist-ai-rmf-1.0.pdf",
+          "page_start": 18,
+          "page_end": 19,
+          "score": 0.6751030608904243
+        },
+        {
+          "filename": "nist-ai-rmf-1.0.pdf",
+          "page_start": 46,
+          "page_end": 47,
+          "score": 0.5971036560251434
+        },
+        {
+          "filename": "nist-ai-rmf-1.0.pdf",
+          "page_start": 15,
+          "page_end": 17,
+          "score": 0.5848807846652454
+        },
+        {
+          "filename": "nist-ai-rmf-1.0.pdf",
+          "page_start": 37,
+          "page_end": 38,
+          "score": 0.5816974458318148
+        },
+        {
+          "filename": "nist-ai-rmf-1.0.pdf",
+          "page_start": 43,
+          "page_end": 44,
+          "score": 0.5649837158186629
+        },
+        {
+          "filename": "nist-ai-rmf-1.0.pdf",
+          "page_start": 23,
+          "page_end": 25,
+          "score": 0.5615657834616119
+        }
+      ],
+      "response": {
+        "query_id": "0c18fc36-e5c2-41b1-b7d8-d148d90be08a",
+        "status": "answered",
+        "answer": "The AI RMF adopts the ISO/IEC TS 5723:2022 definition of accuracy as the closeness of results of observations, computations, or estimates to the true values or values accepted as true [S1]. Accuracy measures should consider computational-centric measures such as false positive and false negative rates, as well as human-AI teaming, and should demonstrate external validity [S1]. Accuracy measurements should be paired with clearly defined, realistic test sets representative of expected use, along with details about test methodology [S1].",
+        "notice": null,
+        "claims": [
+          {
+            "text": "The AI RMF adopts the ISO/IEC TS 5723:2022 definition of accuracy as the closeness of results of observations, computations, or estimates to the true values or values accepted as true.",
+            "source_ids": [
+              "S1"
+            ]
+          },
+          {
+            "text": "Accuracy measures should consider computational-centric measures such as false positive and false negative rates, as well as human-AI teaming, and should demonstrate external validity.",
+            "source_ids": [
+              "S1"
+            ]
+          },
+          {
+            "text": "Accuracy measurements should be paired with clearly defined, realistic test sets representative of expected use, along with details about test methodology.",
+            "source_ids": [
+              "S1"
+            ]
+          }
+        ],
+        "citations": [
+          {
+            "source_id": "S1",
+            "quote": "Accuracy is defined by ISO /IEC TS 5723:2022 as \u201ccloseness of results of observations, computations, or estimates to the true values or the values accepted as being true.\u201d",
+            "document_id": "8c776c92-260f-4edf-acf3-6a70e3f0465f",
+            "chunk_id": "ad011001-1a5e-444c-9720-00e361b833f3",
+            "filename": "nist-ai-rmf-1.0.pdf",
+            "page_start": 18,
+            "page_end": 19,
+            "heading": null
+          },
+          {
+            "source_id": "S1",
+            "quote": "Mea- sures of accuracy should consider computational-centric measures (e.g., false positive and false negative rates), human-AI teaming, and demonstrate external validity (generalizable beyond the training conditions)",
+            "document_id": "8c776c92-260f-4edf-acf3-6a70e3f0465f",
+            "chunk_id": "ad011001-1a5e-444c-9720-00e361b833f3",
+            "filename": "nist-ai-rmf-1.0.pdf",
+            "page_start": 18,
+            "page_end": 19,
+            "heading": null
+          },
+          {
+            "source_id": "S1",
+            "quote": "Accuracy measurements should always be paired with clearly defined and realistic test sets \u2013 that are representative of conditions of expected use \u2013 and details about test methodology",
+            "document_id": "8c776c92-260f-4edf-acf3-6a70e3f0465f",
+            "chunk_id": "ad011001-1a5e-444c-9720-00e361b833f3",
+            "filename": "nist-ai-rmf-1.0.pdf",
+            "page_start": 18,
+            "page_end": 19,
+            "heading": null
+          }
+        ],
+        "retrieval": {
+          "chunks_retrieved": 6,
+          "top_score": 0.6751030608904243
+        },
+        "verification": {
+          "claims_supported": 3,
+          "claims_rejected": 0,
+          "citations_verified": 3,
+          "citations_rejected": 0,
+          "downgraded_from": null
+        },
+        "usage": {
+          "llm_called": true,
+          "model": "claude-sonnet-5-5",
+          "input_tokens": 5752,
+          "output_tokens": 430
+        },
+        "latency_ms": 3141
+      },
+      "error": null,
+      "claim_judgments": [],
+      "answer_judgment": null
+    },
+    {
+      "item": {
+        "id": "rmf-cross-cutting-function",
+        "category": "answerable",
+        "question": "Which AI RMF function is cross-cutting and infused throughout the other functions?",
+        "expected_sources": [
+          {
+            "file": "nist-ai-rmf-1.0.pdf",
+            "pages": [
+              25,
+              27
+            ]
+          }
+        ],
+        "reference_answer": "GOVERN.",
+        "acceptable_statuses": [
+          "answered",
+          "partial"
+        ]
+      },
+      "search_hits": [
+        {
+          "filename": "nist-ai-rmf-1.0.pdf",
+          "page_start": 26,
+          "page_end": 27,
+          "score": 0.5721239475649821
+        },
+        {
+          "filename": "nist-ai-rmf-1.0.pdf",
+          "page_start": 46,
+          "page_end": 47,
+          "score": 0.5705409669115441
+        },
+        {
+          "filename": "nist-ai-rmf-1.0.pdf",
+          "page_start": 24,
+          "page_end": 26,
+          "score": 0.5549839809912729
+        },
+        {
+          "filename": "nist-ai-rmf-1.0.pdf",
+          "page_start": 37,
+          "page_end": 38,
+          "score": 0.5246413197847503
+        },
+        {
+          "filename": "nist-ai-rmf-1.0.pdf",
+          "page_start": 12,
+          "page_end": 13,
+          "score": 0.5144815847088671
+        },
+        {
+          "filename": "nist-ai-rmf-1.0.pdf",
+          "page_start": 29,
+          "page_end": 30,
+          "score": 0.5072032388185176
+        }
+      ],
+      "response": {
+        "query_id": "81f0857a-e6e8-458c-ab4c-46d29e0710fe",
+        "status": "answered",
+        "answer": "The GOVERN function is the cross-cutting function in the AI RMF, infused throughout AI risk management and enabling the other functions [S1]. Governance is designed to inform and be infused throughout the other three functions (MAP, MEASURE, and MANAGE) [S3].",
+        "notice": null,
+        "claims": [
+          {
+            "text": "The GOVERN function is the cross-cutting function in the AI RMF, infused throughout AI risk management and enabling the other functions.",
+            "source_ids": [
+              "S1"
+            ]
+          },
+          {
+            "text": "Governance is designed to inform and be infused throughout the other three functions (MAP, MEASURE, and MANAGE).",
+            "source_ids": [
+              "S3"
+            ]
+          }
+        ],
+        "citations": [
+          {
+            "source_id": "S1",
+            "quote": "GOVERN is a cross-cutting function that is infused throughout AI risk management and enables the other functions of the process",
+            "document_id": "8c776c92-260f-4edf-acf3-6a70e3f0465f",
+            "chunk_id": "15cda27f-fc16-4a55-84ba-4a9b086977eb",
+            "filename": "nist-ai-rmf-1.0.pdf",
+            "page_start": 26,
+            "page_end": 27,
+            "heading": null
+          },
+          {
+            "source_id": "S3",
+            "quote": "Governance is designed to be a cross-cutting function to inform and be infused throughout the other three functions",
+            "document_id": "8c776c92-260f-4edf-acf3-6a70e3f0465f",
+            "chunk_id": "7cc25852-f1af-41df-b53e-cf7235e6a01b",
+            "filename": "nist-ai-rmf-1.0.pdf",
+            "page_start": 24,
+            "page_end": 26,
+            "heading": null
+          }
+        ],
+        "retrieval": {
+          "chunks_retrieved": 6,
+          "top_score": 0.5721625579365212
+        },
+        "verification": {
+          "claims_supported": 2,
+          "claims_rejected": 0,
+          "citations_verified": 2,
+          "citations_rejected": 0,
+          "downgraded_from": null
+        },
+        "usage": {
+          "llm_called": true,
+          "model": "claude-sonnet-5-5",
+          "input_tokens": 5637,
+          "output_tokens": 223
+        },
+        "latency_ms": 2641
+      },
+      "error": null,
+      "claim_judgments": [],
+      "answer_judgment": null
+    },
+    {
+      "item": {
+        "id": "rmf-govern-1-1",
+        "category": "answerable",
+        "question": "What does GOVERN 1.1 require?",
+        "expected_sources": [
+          {
+            "file": "nist-ai-rmf-1.0.pdf",
+            "pages": [
+              27
+            ]
+          }
+        ],
+        "reference_answer": "Legal and regulatory requirements involving AI are understood, managed, and documented.",
+        "acceptable_statuses": [
+          "answered",
+          "partial"
+        ]
+      },
+      "search_hits": [
+        {
+          "filename": "nist-ai-rmf-1.0.pdf",
+          "page_start": 27,
+          "page_end": 28,
+          "score": 0.5064453667920068
+        },
+        {
+          "filename": "nist-ai-rmf-1.0.pdf",
+          "page_start": 28,
+          "page_end": 28,
+          "score": 0.49341676221605746
+        },
+        {
+          "filename": "nist-ai-600-1-genai-profile.pdf",
+          "page_start": 19,
+          "page_end": 20,
+          "score": 0.4776558746135553
+        },
+        {
+          "filename": "nist-ai-rmf-1.0.pdf",
+          "page_start": 26,
+          "page_end": 27,
+          "score": 0.47064355947277825
+        },
+        {
+          "filename": "nist-ai-600-1-genai-profile.pdf",
+          "page_start": 18,
+          "page_end": 18,
+          "score": 0.4695841677724224
+        },
+        {
+          "filename": "nist-ai-600-1-genai-profile.pdf",
+          "page_start": 20,
+          "page_end": 21,
+          "score": 0.46387195155725114
+        }
+      ],
+      "response": {
+        "query_id": "a6661c5a-a846-4899-871e-f05883d6a17b",
+        "status": "answered",
+        "answer": "GOVERN 1.1 requires that legal and regulatory requirements involving AI are understood, managed, and documented [S1].",
+        "notice": null,
+        "claims": [
+          {
+            "text": "GOVERN 1.1 requires that legal and regulatory requirements involving AI are understood, managed, and documented.",
+            "source_ids": [
+              "S1"
+            ]
+          }
+        ],
+        "citations": [
+          {
+            "source_id": "S1",
+            "quote": "GOVERN 1.1: Legal and regulatory requirements involving AI are understood, managed, and documented",
+            "document_id": "8c776c92-260f-4edf-acf3-6a70e3f0465f",
+            "chunk_id": "6813ce75-49ef-4324-903c-1c193754b29b",
+            "filename": "nist-ai-rmf-1.0.pdf",
+            "page_start": 27,
+            "page_end": 28,
+            "heading": null
+          }
+        ],
+        "retrieval": {
+          "chunks_retrieved": 6,
+          "top_score": 0.5064453667920068
+        },
+        "verification": {
+          "claims_supported": 1,
+          "claims_rejected": 0,
+          "citations_verified": 1,
+          "citations_rejected": 0,
+          "downgraded_from": null
+        },
+        "usage": {
+          "llm_called": true,
+          "model": "claude-sonnet-5-5",
+          "input_tokens": 5809,
+          "output_tokens": 118
+        },
+        "latency_ms": 2723
+      },
+      "error": null,
+      "claim_judgments": [],
+      "answer_judgment": null
+    },
+    {
+      "item": {
+        "id": "rmf-risk-response-options",
+        "category": "answerable",
+        "question": "What risk response options does MANAGE 1.3 list?",
+        "expected_sources": [
+          {
+            "file": "nist-ai-rmf-1.0.pdf",
+            "pages": [
+              37
+            ]
+          }
+        ],
+        "reference_answer": "Mitigating, transferring, avoiding, or accepting.",
+        "acceptable_statuses": [
+          "answered",
+          "partial"
+        ]
+      },
+      "search_hits": [
+        {
+          "filename": "nist-ai-rmf-1.0.pdf",
+          "page_start": 37,
+          "page_end": 38,
+          "score": 0.618905044245715
+        },
+        {
+          "filename": "nist-ai-rmf-1.0.pdf",
+          "page_start": 36,
+          "page_end": 37,
+          "score": 0.539290217733558
+        },
+        {
+          "filename": "nist-ai-600-1-genai-profile.pdf",
+          "page_start": 44,
+          "page_end": 44,
+          "score": 0.5333391447802736
+        },
+        {
+          "filename": "nist-ai-rmf-1.0.pdf",
+          "page_start": 37,
+          "page_end": 38,
+          "score": 0.5327115299792207
+        },
+        {
+          "filename": "nist-ai-rmf-1.0.pdf",
+          "page_start": 12,
+          "page_end": 13,
+          "score": 0.5191011677589882
+        },
+        {
+          "filename": "nist-ai-rmf-1.0.pdf",
+          "page_start": 32,
+          "page_end": 33,
+          "score": 0.5025374545025035
+        }
+      ],
+      "response": {
+        "query_id": "4e0b1687-417d-4030-b499-c8e6b2eb4c95",
+        "status": "answered",
+        "answer": "MANAGE 1.3 states that risk response options can include mitigating, transferring, avoiding, or accepting [S1][S3].",
+        "notice": null,
+        "claims": [
+          {
+            "text": "MANAGE 1.3 states that risk response options can include mitigating, transferring, avoiding, or accepting.",
+            "source_ids": [
+              "S1",
+              "S3"
+            ]
+          }
+        ],
+        "citations": [
+          {
+            "source_id": "S1",
+            "quote": "Risk response options can include mitigating, transfer- ring, avoiding, or accepting",
+            "document_id": "8c776c92-260f-4edf-acf3-6a70e3f0465f",
+            "chunk_id": "e10d4f7c-f69c-4b2c-adbe-1d68d350f337",
+            "filename": "nist-ai-rmf-1.0.pdf",
+            "page_start": 37,
+            "page_end": 38,
+            "heading": null
+          },
+          {
+            "source_id": "S3",
+            "quote": "Risk response options can include mitigating, transferring, avoiding, or accepting",
+            "document_id": "b0ac9c44-eaff-47f9-a2fe-d1abb83c5e62",
+            "chunk_id": "990191f4-3469-4220-8701-935491f09bd6",
+            "filename": "nist-ai-600-1-genai-profile.pdf",
+            "page_start": 44,
+            "page_end": 44,
+            "heading": null
+          }
+        ],
+        "retrieval": {
+          "chunks_retrieved": 6,
+          "top_score": 0.6187446179658074
+        },
+        "verification": {
+          "claims_supported": 1,
+          "claims_rejected": 0,
+          "citations_verified": 2,
+          "citations_rejected": 0,
+          "downgraded_from": null
+        },
+        "usage": {
+          "llm_called": true,
+          "model": "claude-sonnet-5-5",
+          "input_tokens": 5817,
+          "output_tokens": 151
+        },
+        "latency_ms": 2041
+      },
+      "error": null,
+      "claim_judgments": [],
+      "answer_judgment": null
+    },
+    {
+      "item": {
+        "id": "rmf-residual-risk",
+        "category": "answerable",
+        "question": "How does the AI RMF define negative residual risk?",
+        "expected_sources": [
+          {
+            "file": "nist-ai-rmf-1.0.pdf",
+            "pages": [
+              37
+            ]
+          }
+        ],
+        "reference_answer": "The sum of all unmitigated risks, documented for downstream acquirers and end users (MANAGE 1.4).",
+        "acceptable_statuses": [
+          "answered",
+          "partial"
+        ]
+      },
+      "search_hits": [
+        {
+          "filename": "nist-ai-rmf-1.0.pdf",
+          "page_start": 12,
+          "page_end": 13,
+          "score": 0.5875436071031406
+        },
+        {
+          "filename": "nist-ai-rmf-1.0.pdf",
+          "page_start": 9,
+          "page_end": 9,
+          "score": 0.5855227353968023
+        },
+        {
+          "filename": "nist-ai-rmf-1.0.pdf",
+          "page_start": 11,
+          "page_end": 12,
+          "score": 0.5675525939773914
+        },
+        {
+          "filename": "nist-ai-rmf-1.0.pdf",
+          "page_start": 43,
+          "page_end": 44,
+          "score": 0.5601321358435651
+        },
+        {
+          "filename": "nist-ai-rmf-1.0.pdf",
+          "page_start": 13,
+          "page_end": 14,
+          "score": 0.5564566295589775
+        },
+        {
+          "filename": "nist-ai-rmf-1.0.pdf",
+          "page_start": 47,
+          "page_end": 48,
+          "score": 0.5533646670383361
+        }
+      ],
+      "response": {
+        "query_id": "e72d75b5-5019-4703-b28e-11ed58301cc9",
+        "status": "insufficient_context",
+        "answer": "I couldn't find information about that in the provided documents.",
+        "notice": null,
+        "claims": [],
+        "citations": [],
+        "retrieval": {
+          "chunks_retrieved": 6,
+          "top_score": 0.5876097828216876
+        },
+        "verification": {
+          "claims_supported": 0,
+          "claims_rejected": 0,
+          "citations_verified": 0,
+          "citations_rejected": 0,
+          "downgraded_from": null
+        },
+        "usage": {
+          "llm_called": true,
+          "model": "claude-sonnet-5-5",
+          "input_tokens": 5663,
+          "output_tokens": 20
+        },
+        "latency_ms": 1933
+      },
+      "error": null,
+      "claim_judgments": [],
+      "answer_judgment": null
+    },
+    {
+      "item": {
+        "id": "rmf-ai-vs-software-risks",
+        "category": "answerable",
+        "question": "What AI-specific risks are new or increased compared to traditional software?",
+        "expected_sources": [
+          {
+            "file": "nist-ai-rmf-1.0.pdf",
+            "pages": [
+              43,
+              44
+            ]
+          }
+        ],
+        "reference_answer": "Examples: training data may not represent the intended context; dependence on large, complex data; changes during training altering performance; stale or detached datasets; scale and complexity; pre-trained models increasing statistical uncertainty; hard-to-predict failure modes; privacy risk from data aggregation; more frequent maintenance due to drift; opacity and reproducibility concerns; underdeveloped testing standards.",
+        "acceptable_statuses": [
+          "answered",
+          "partial"
+        ]
+      },
+      "search_hits": [
+        {
+          "filename": "nist-ai-rmf-1.0.pdf",
+          "page_start": 42,
+          "page_end": 43,
+          "score": 0.7520934797695928
+        },
+        {
+          "filename": "nist-ai-rmf-1.0.pdf",
+          "page_start": 6,
+          "page_end": 6,
+          "score": 0.6977190897998238
+        },
+        {
+          "filename": "nist-ai-rmf-1.0.pdf",
+          "page_start": 13,
+          "page_end": 13,
+          "score": 0.6580150676780847
+        },
+        {
+          "filename": "nist-ai-600-1-genai-profile.pdf",
+          "page_start": 7,
+          "page_end": 8,
+          "score": 0.6541148957332207
+        },
+        {
+          "filename": "nist-ai-rmf-1.0.pdf",
+          "page_start": 43,
+          "page_end": 44,
+          "score": 0.644901377403085
+        },
+        {
+          "filename": "nist-ai-rmf-1.0.pdf",
+          "page_start": 9,
+          "page_end": 11,
+          "score": 0.6443417306766377
+        }
+      ],
+      "response": null,
+      "error": "HTTPStatusError: Server error '502 Bad Gateway' for url 'https://grounded-1004795551444.us-east4.run.app/v1/collections/e946a23b-7702-4285-9cb5-2c2412da9fb7/query'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/502",
+      "claim_judgments": [],
+      "answer_judgment": null
+    },
+    {
+      "item": {
+        "id": "genai-confabulation",
+        "category": "answerable",
+        "question": "What is confabulation in generative AI?",
+        "expected_sources": [
+          {
+            "file": "nist-ai-600-1-genai-profile.pdf",
+            "pages": [
+              8,
+              10
+            ]
+          }
+        ],
+        "reference_answer": "GAI systems generating and confidently presenting erroneous or false content in response to prompts, colloquially called hallucinations or fabrications.",
+        "acceptable_statuses": [
+          "answered",
+          "partial"
+        ]
+      },
+      "search_hits": [
+        {
+          "filename": "nist-ai-600-1-genai-profile.pdf",
+          "page_start": 9,
+          "page_end": 10,
+          "score": 0.6258629033677106
+        },
+        {
+          "filename": "nist-ai-600-1-genai-profile.pdf",
+          "page_start": 10,
+          "page_end": 11,
+          "score": 0.5489570070837305
+        },
+        {
+          "filename": "nist-ai-600-1-genai-profile.pdf",
+          "page_start": 58,
+          "page_end": 59,
+          "score": 0.5097311031291565
+        },
+        {
+          "filename": "nist-ai-600-1-genai-profile.pdf",
+          "page_start": 58,
+          "page_end": 59,
+          "score": 0.5077084916362401
+        },
+        {
+          "filename": "nist-ai-600-1-genai-profile.pdf",
+          "page_start": 11,
+          "page_end": 11,
+          "score": 0.46826051683810554
+        },
+        {
+          "filename": "nist-ai-600-1-genai-profile.pdf",
+          "page_start": 34,
+          "page_end": 35,
+          "score": 0.4579538360667579
+        }
+      ],
+      "response": {
+        "query_id": "bcad671e-6bde-40e4-8efd-e606e86f7c34",
+        "status": "answered",
+        "answer": "Confabulation is a phenomenon in which GAI systems generate and confidently present erroneous or false content in response to prompts [S1]. Confabulations also include outputs that diverge from the prompts or other input, or that contradict previously generated statements in the same context [S1]. Confabulation is colloquially also called \"hallucinations\" or \"fabrications.\" [S1]. Confabulations are a natural result of how generative models are designed, since they generate outputs that approximate the statistical distribution of their training data [S1].",
+        "notice": null,
+        "claims": [
+          {
+            "text": "Confabulation is a phenomenon in which GAI systems generate and confidently present erroneous or false content in response to prompts.",
+            "source_ids": [
+              "S1"
+            ]
+          },
+          {
+            "text": "Confabulations also include outputs that diverge from the prompts or other input, or that contradict previously generated statements in the same context.",
+            "source_ids": [
+              "S1"
+            ]
+          },
+          {
+            "text": "Confabulation is colloquially also called \"hallucinations\" or \"fabrications.\"",
+            "source_ids": [
+              "S1"
+            ]
+          },
+          {
+            "text": "Confabulations are a natural result of how generative models are designed, since they generate outputs that approximate the statistical distribution of their training data.",
+            "source_ids": [
+              "S1"
+            ]
+          }
+        ],
+        "citations": [
+          {
+            "source_id": "S1",
+            "quote": "\u201cConfabulation\u201d refers to a phenomenon in which GAI systems generate and con\ufb01dently present erroneous or false content in response to prompts",
+            "document_id": "b0ac9c44-eaff-47f9-a2fe-d1abb83c5e62",
+            "chunk_id": "2fe0b211-0a78-42fa-ba07-f45e018a8eba",
+            "filename": "nist-ai-600-1-genai-profile.pdf",
+            "page_start": 9,
+            "page_end": 10,
+            "heading": null
+          },
+          {
+            "source_id": "S1",
+            "quote": "Confabulations also include generated outputs that diverge from the prompts or other input or that contradict previously generated statements in the same context",
+            "document_id": "b0ac9c44-eaff-47f9-a2fe-d1abb83c5e62",
+            "chunk_id": "2fe0b211-0a78-42fa-ba07-f45e018a8eba",
+            "filename": "nist-ai-600-1-genai-profile.pdf",
+            "page_start": 9,
+            "page_end": 10,
+            "heading": null
+          },
+          {
+            "source_id": "S1",
+            "quote": "These phenomena are colloquially also referred to as \u201challucinations\u201d or \u201cfabrications.\u201d",
+            "document_id": "b0ac9c44-eaff-47f9-a2fe-d1abb83c5e62",
+            "chunk_id": "2fe0b211-0a78-42fa-ba07-f45e018a8eba",
+            "filename": "nist-ai-600-1-genai-profile.pdf",
+            "page_start": 9,
+            "page_end": 10,
+            "heading": null
+          },
+          {
+            "source_id": "S1",
+            "quote": "Confabulations are a natural result of the way generative models are designed: they generate outputs that approximate the statistical distribution of their training data",
+            "document_id": "b0ac9c44-eaff-47f9-a2fe-d1abb83c5e62",
+            "chunk_id": "2fe0b211-0a78-42fa-ba07-f45e018a8eba",
+            "filename": "nist-ai-600-1-genai-profile.pdf",
+            "page_start": 9,
+            "page_end": 10,
+            "heading": null
+          }
+        ],
+        "retrieval": {
+          "chunks_retrieved": 6,
+          "top_score": 0.6258790044967665
+        },
+        "verification": {
+          "claims_supported": 4,
+          "claims_rejected": 0,
+          "citations_verified": 4,
+          "citations_rejected": 0,
+          "downgraded_from": null
+        },
+        "usage": {
+          "llm_called": true,
+          "model": "claude-sonnet-5-5",
+          "input_tokens": 5631,
+          "output_tokens": 440
+        },
+        "latency_ms": 3655
+      },
+      "error": null,
+      "claim_judgments": [],
+      "answer_judgment": null
+    },
+    {
+      "item": {
+        "id": "genai-carbon-training",
+        "category": "answerable",
+        "question": "According to current estimates, how much carbon can training a single transformer LLM emit?",
+        "expected_sources": [
+          {
+            "file": "nist-ai-600-1-genai-profile.pdf",
+            "pages": [
+              12
+            ]
+          }
+        ],
+        "reference_answer": "As much carbon as 300 round-trip flights between San Francisco and New York.",
+        "acceptable_statuses": [
+          "answered",
+          "partial"
+        ]
+      },
+      "search_hits": [
+        {
+          "filename": "nist-ai-600-1-genai-profile.pdf",
+          "page_start": 11,
+          "page_end": 12,
+          "score": 0.3105525318357074
+        },
+        {
+          "filename": "nist-ai-600-1-genai-profile.pdf",
+          "page_start": 9,
+          "page_end": 9,
+          "score": 0.274332341555373
+        },
+        {
+          "filename": "nist-ai-600-1-genai-profile.pdf",
+          "page_start": 10,
+          "page_end": 11,
+          "score": 0.2257233417176624
+        },
+        {
+          "filename": "nist-ai-600-1-genai-profile.pdf",
+          "page_start": 63,
+          "page_end": 63,
+          "score": 0.22380790956109342
+        },
+        {
+          "filename": "nist-ai-600-1-genai-profile.pdf",
+          "page_start": 40,
+          "page_end": 42,
+          "score": 0.22360473747754073
+        },
+        {
+          "filename": "nist-ai-600-1-genai-profile.pdf",
+          "page_start": 46,
+          "page_end": 47,
+          "score": 0.21509434077669864
+        }
+      ],
+      "response": {
+        "query_id": "a1765273-2ca3-4795-914c-d107621db6f4",
+        "status": "answered",
+        "answer": "Current estimates suggest that training a single transformer LLM can emit as much carbon as 300 round-trip flights between San Francisco and New York [S1].",
+        "notice": null,
+        "claims": [
+          {
+            "text": "Current estimates suggest that training a single transformer LLM can emit as much carbon as 300 round-trip flights between San Francisco and New York.",
+            "source_ids": [
+              "S1"
+            ]
+          }
+        ],
+        "citations": [
+          {
+            "source_id": "S1",
+            "quote": "Current estimates suggest that training a single transformer LLM can emit as much carbon as 300 round- trip \ufb02ights between San Francisco and New York",
+            "document_id": "b0ac9c44-eaff-47f9-a2fe-d1abb83c5e62",
+            "chunk_id": "cb044044-801a-4dfa-8cd9-1c0fbff71703",
+            "filename": "nist-ai-600-1-genai-profile.pdf",
+            "page_start": 11,
+            "page_end": 12,
+            "heading": null
+          }
+        ],
+        "retrieval": {
+          "chunks_retrieved": 6,
+          "top_score": 0.3105525318357074
+        },
+        "verification": {
+          "claims_supported": 1,
+          "claims_rejected": 0,
+          "citations_verified": 1,
+          "citations_rejected": 0,
+          "downgraded_from": null
+        },
+        "usage": {
+          "llm_called": true,
+          "model": "claude-sonnet-5-5",
+          "input_tokens": 5669,
+          "output_tokens": 139
+        },
+        "latency_ms": 2241
+      },
+      "error": null,
+      "claim_judgments": [],
+      "answer_judgment": null
+    },
+    {
+      "item": {
+        "id": "genai-prompt-injection",
+        "category": "answerable",
+        "question": "What is the difference between direct and indirect prompt injection?",
+        "expected_sources": [
+          {
+            "file": "nist-ai-600-1-genai-profile.pdf",
+            "pages": [
+              15
+            ]
+          }
+        ],
+        "reference_answer": "Direct: attackers craft malicious prompts and input them directly to a GAI system. Indirect: adversaries remotely exploit LLM-integrated applications by injecting prompts into data likely to be retrieved.",
+        "acceptable_statuses": [
+          "answered",
+          "partial"
+        ]
+      },
+      "search_hits": [
+        {
+          "filename": "nist-ai-600-1-genai-profile.pdf",
+          "page_start": 14,
+          "page_end": 15,
+          "score": 0.3565007186743516
+        },
+        {
+          "filename": "nist-ai-600-1-genai-profile.pdf",
+          "page_start": 59,
+          "page_end": 59,
+          "score": 0.28853824898464353
+        },
+        {
+          "filename": "nist-ai-600-1-genai-profile.pdf",
+          "page_start": 58,
+          "page_end": 59,
+          "score": 0.2856398470781536
+        },
+        {
+          "filename": "nist-ai-600-1-genai-profile.pdf",
+          "page_start": 11,
+          "page_end": 11,
+          "score": 0.2811203195331644
+        },
+        {
+          "filename": "nist-ai-600-1-genai-profile.pdf",
+          "page_start": 57,
+          "page_end": 58,
+          "score": 0.2725206835434758
+        },
+        {
+          "filename": "nist-ai-600-1-genai-profile.pdf",
+          "page_start": 9,
+          "page_end": 10,
+          "score": 0.25385653081831805
+        }
+      ],
+      "response": {
+        "query_id": "5f0b9b01-3a00-4609-a176-9a1a416af6f0",
+        "status": "answered",
+        "answer": "In direct prompt injection, attackers craft malicious prompts and input them directly to a GAI system [S1]. In indirect prompt injection, adversaries remotely exploit LLM-integrated applications by injecting prompts into data likely to be retrieved, without a direct interface [S1].",
+        "notice": null,
+        "claims": [
+          {
+            "text": "In direct prompt injection, attackers craft malicious prompts and input them directly to a GAI system.",
+            "source_ids": [
+              "S1"
+            ]
+          },
+          {
+            "text": "In indirect prompt injection, adversaries remotely exploit LLM-integrated applications by injecting prompts into data likely to be retrieved, without a direct interface.",
+            "source_ids": [
+              "S1"
+            ]
+          }
+        ],
+        "citations": [
+          {
+            "source_id": "S1",
+            "quote": "In direct prompt injections, attackers might craft malicious prompts and input them directly to a GAI system, with a variety of downstream negative consequences to interconnected systems",
+            "document_id": "b0ac9c44-eaff-47f9-a2fe-d1abb83c5e62",
+            "chunk_id": "9a4855b5-cfe0-40d0-9588-7fe223331ffc",
+            "filename": "nist-ai-600-1-genai-profile.pdf",
+            "page_start": 14,
+            "page_end": 15,
+            "heading": null
+          },
+          {
+            "source_id": "S1",
+            "quote": "Indirect prompt injection attacks occur when adversaries remotely (i.e., without a direct interface) exploit LLM-integrated applications by injecting prompts into data likely to be retrieved",
+            "document_id": "b0ac9c44-eaff-47f9-a2fe-d1abb83c5e62",
+            "chunk_id": "9a4855b5-cfe0-40d0-9588-7fe223331ffc",
+            "filename": "nist-ai-600-1-genai-profile.pdf",
+            "page_start": 14,
+            "page_end": 15,
+            "heading": null
+          }
+        ],
+        "retrieval": {
+          "chunks_retrieved": 6,
+          "top_score": 0.3565007186743516
+        },
+        "verification": {
+          "claims_supported": 2,
+          "claims_rejected": 0,
+          "citations_verified": 2,
+          "citations_rejected": 0,
+          "downgraded_from": null
+        },
+        "usage": {
+          "llm_called": true,
+          "model": "claude-sonnet-5-5",
+          "input_tokens": 5660,
+          "output_tokens": 276
+        },
+        "latency_ms": 3027
+      },
+      "error": null,
+      "claim_judgments": [],
+      "answer_judgment": null
+    },
+    {
+      "item": {
+        "id": "genai-data-poisoning",
+        "category": "answerable",
+        "question": "What is data poisoning?",
+        "expected_sources": [
+          {
+            "file": "nist-ai-600-1-genai-profile.pdf",
+            "pages": [
+              15
+            ]
+          }
+        ],
+        "reference_answer": "An adversary compromises a training dataset used by a model to manipulate its outputs or operation.",
+        "acceptable_statuses": [
+          "answered",
+          "partial"
+        ]
+      },
+      "search_hits": [
+        {
+          "filename": "nist-ai-600-1-genai-profile.pdf",
+          "page_start": 11,
+          "page_end": 11,
+          "score": 0.37144072736604183
+        },
+        {
+          "filename": "nist-ai-600-1-genai-profile.pdf",
+          "page_start": 8,
+          "page_end": 9,
+          "score": 0.3564112310773577
+        },
+        {
+          "filename": "nist-ai-600-1-genai-profile.pdf",
+          "page_start": 14,
+          "page_end": 15,
+          "score": 0.3367823929385282
+        },
+        {
+          "filename": "nist-ai-600-1-genai-profile.pdf",
+          "page_start": 9,
+          "page_end": 10,
+          "score": 0.3330355503164042
+        },
+        {
+          "filename": "nist-ai-600-1-genai-profile.pdf",
+          "page_start": 57,
+          "page_end": 58,
+          "score": 0.3321601848874034
+        },
+        {
+          "filename": "nist-ai-600-1-genai-profile.pdf",
+          "page_start": 60,
+          "page_end": 60,
+          "score": 0.3229580505208467
+        }
+      ],
+      "response": {
+        "query_id": "f7923cad-8463-4db3-8cf1-7af23030bb0f",
+        "status": "answered",
+        "answer": "Data poisoning is a cybersecurity risk to GAI in which an adversary compromises a training dataset used by a model to manipulate its outputs or operation [S3]. Malicious tampering with data or parts of the model could exacerbate risks associated with GAI system outputs [S3].",
+        "notice": null,
+        "claims": [
+          {
+            "text": "Data poisoning is a cybersecurity risk to GAI in which an adversary compromises a training dataset used by a model to manipulate its outputs or operation.",
+            "source_ids": [
+              "S3"
+            ]
+          },
+          {
+            "text": "Malicious tampering with data or parts of the model could exacerbate risks associated with GAI system outputs.",
+            "source_ids": [
+              "S3"
+            ]
+          }
+        ],
+        "citations": [
+          {
+            "source_id": "S3",
+            "quote": "Another cybersecurity risk to GAI is data poisoning, in which an adversary compromises a training dataset used by a model to manipulate its outputs or operation",
+            "document_id": "b0ac9c44-eaff-47f9-a2fe-d1abb83c5e62",
+            "chunk_id": "9a4855b5-cfe0-40d0-9588-7fe223331ffc",
+            "filename": "nist-ai-600-1-genai-profile.pdf",
+            "page_start": 14,
+            "page_end": 15,
+            "heading": null
+          },
+          {
+            "source_id": "S3",
+            "quote": "Malicious tampering with data or parts of the model could exacerbate risks associated with GAI system outputs",
+            "document_id": "b0ac9c44-eaff-47f9-a2fe-d1abb83c5e62",
+            "chunk_id": "9a4855b5-cfe0-40d0-9588-7fe223331ffc",
+            "filename": "nist-ai-600-1-genai-profile.pdf",
+            "page_start": 14,
+            "page_end": 15,
+            "heading": null
+          }
+        ],
+        "retrieval": {
+          "chunks_retrieved": 6,
+          "top_score": 0.37144072736604183
+        },
+        "verification": {
+          "claims_supported": 2,
+          "claims_rejected": 0,
+          "citations_verified": 2,
+          "citations_rejected": 0,
+          "downgraded_from": null
+        },
+        "usage": {
+          "llm_called": true,
+          "model": "claude-sonnet-5-5",
+          "input_tokens": 5705,
+          "output_tokens": 243
+        },
+        "latency_ms": 3241
+      },
+      "error": null,
+      "claim_judgments": [],
+      "answer_judgment": null
+    },
+    {
+      "item": {
+        "id": "genai-red-team-composition",
+        "category": "answerable",
+        "question": "What makes an AI red team effective according to the Generative AI Profile?",
+        "expected_sources": [
+          {
+            "file": "nist-ai-600-1-genai-profile.pdf",
+            "pages": [
+              54
+            ]
+          }
+        ],
+        "reference_answer": "Demographically and interdisciplinarily diverse teams, with domain expertise and awareness of socio-cultural aspects of the deployment context.",
+        "acceptable_statuses": [
+          "answered",
+          "partial"
+        ]
+      },
+      "search_hits": [
+        {
+          "filename": "nist-ai-600-1-genai-profile.pdf",
+          "page_start": 54,
+          "page_end": 55,
+          "score": 0.6853243033420291
+        },
+        {
+          "filename": "nist-ai-600-1-genai-profile.pdf",
+          "page_start": 54,
+          "page_end": 54,
+          "score": 0.6356322226736971
+        },
+        {
+          "filename": "nist-ai-600-1-genai-profile.pdf",
+          "page_start": 4,
+          "page_end": 5,
+          "score": 0.5988511383412018
+        },
+        {
+          "filename": "nist-ai-600-1-genai-profile.pdf",
+          "page_start": 14,
+          "page_end": 15,
+          "score": 0.5904180518829668
+        },
+        {
+          "filename": "nist-ai-600-1-genai-profile.pdf",
+          "page_start": 5,
+          "page_end": 6,
+          "score": 0.5893001296356108
+        },
+        {
+          "filename": "nist-ai-600-1-genai-profile.pdf",
+          "page_start": 1,
+          "page_end": 3,
+          "score": 0.56507441987162
+        }
+      ],
+      "response": {
+        "query_id": "f6b095d3-e4f0-4052-8118-1d3270b4bc5d",
+        "status": "answered",
+        "answer": "The quality of AI red-teaming outputs is related to the background and expertise of the red team itself [S2]. Demographically and interdisciplinarily diverse red teams can help identify flaws in the varying contexts where GAI will be used [S2]. For best results, red teams should demonstrate domain expertise and awareness of socio-cultural aspects within the deployment context [S1]. Red-teaming results should receive additional analysis before being incorporated into governance, decision making, policy and procedural updates, and AI risk management efforts [S1].",
+        "notice": null,
+        "claims": [
+          {
+            "text": "The quality of AI red-teaming outputs is related to the background and expertise of the red team itself.",
+            "source_ids": [
+              "S2"
+            ]
+          },
+          {
+            "text": "Demographically and interdisciplinarily diverse red teams can help identify flaws in the varying contexts where GAI will be used.",
+            "source_ids": [
+              "S2"
+            ]
+          },
+          {
+            "text": "For best results, red teams should demonstrate domain expertise and awareness of socio-cultural aspects within the deployment context.",
+            "source_ids": [
+              "S1"
+            ]
+          },
+          {
+            "text": "Red-teaming results should receive additional analysis before being incorporated into governance, decision making, policy and procedural updates, and AI risk management efforts.",
+            "source_ids": [
+              "S1"
+            ]
+          }
+        ],
+        "citations": [
+          {
+            "source_id": "S2",
+            "quote": "The quality of AI red-teaming outputs is related to the background and expertise of the AI red team itself",
+            "document_id": "b0ac9c44-eaff-47f9-a2fe-d1abb83c5e62",
+            "chunk_id": "8b4b8f57-1019-4edc-aa7b-21e71f5fe0d9",
+            "filename": "nist-ai-600-1-genai-profile.pdf",
+            "page_start": 54,
+            "page_end": 54,
+            "heading": null
+          },
+          {
+            "source_id": "S2",
+            "quote": "Demographically and interdisciplinarily diverse AI red teams can be used to identify \ufb02aws in the varying contexts where GAI will be used",
+            "document_id": "b0ac9c44-eaff-47f9-a2fe-d1abb83c5e62",
+            "chunk_id": "8b4b8f57-1019-4edc-aa7b-21e71f5fe0d9",
+            "filename": "nist-ai-600-1-genai-profile.pdf",
+            "page_start": 54,
+            "page_end": 54,
+            "heading": null
+          },
+          {
+            "source_id": "S1",
+            "quote": "For best results, AI red teams should demonstrate domain expertise, and awareness of socio-cultural aspects within the deployment context",
+            "document_id": "b0ac9c44-eaff-47f9-a2fe-d1abb83c5e62",
+            "chunk_id": "c86ccc19-6360-4bf2-8b14-442b39dc59a2",
+            "filename": "nist-ai-600-1-genai-profile.pdf",
+            "page_start": 54,
+            "page_end": 55,
+            "heading": null
+          },
+          {
+            "source_id": "S1",
+            "quote": "AI red-teaming results should be given additional analysis before they are incorporated into organizational governance and decision making, policy and procedural updates, and AI risk management e\ufb00orts",
+            "document_id": "b0ac9c44-eaff-47f9-a2fe-d1abb83c5e62",
+            "chunk_id": "c86ccc19-6360-4bf2-8b14-442b39dc59a2",
+            "filename": "nist-ai-600-1-genai-profile.pdf",
+            "page_start": 54,
+            "page_end": 55,
+            "heading": null
+          }
+        ],
+        "retrieval": {
+          "chunks_retrieved": 6,
+          "top_score": 0.6854904436810879
+        },
+        "verification": {
+          "claims_supported": 4,
+          "claims_rejected": 0,
+          "citations_verified": 4,
+          "citations_rejected": 0,
+          "downgraded_from": null
+        },
+        "usage": {
+          "llm_called": true,
+          "model": "claude-sonnet-5-5",
+          "input_tokens": 5545,
+          "output_tokens": 464
+        },
+        "latency_ms": 3627
+      },
+      "error": null,
+      "claim_judgments": [],
+      "answer_judgment": null
+    },
+    {
+      "item": {
+        "id": "genai-provenance-techniques",
+        "category": "answerable",
+        "question": "What techniques for provenance data tracking does the Generative AI Profile mention?",
+        "expected_sources": [
+          {
+            "file": "nist-ai-600-1-genai-profile.pdf",
+            "pages": [
+              55
+            ]
+          }
+        ],
+        "reference_answer": "Digital watermarking, metadata recording, digital fingerprinting, and human authentication.",
+        "acceptable_statuses": [
+          "answered",
+          "partial"
+        ]
+      },
+      "search_hits": [
+        {
+          "filename": "nist-ai-600-1-genai-profile.pdf",
+          "page_start": 55,
+          "page_end": 55,
+          "score": 0.6317214062633202
+        },
+        {
+          "filename": "nist-ai-600-1-genai-profile.pdf",
+          "page_start": 55,
+          "page_end": 56,
+          "score": 0.5808677539941571
+        },
+        {
+          "filename": "nist-ai-600-1-genai-profile.pdf",
+          "page_start": 5,
+          "page_end": 6,
+          "score": 0.5456498963830972
+        },
+        {
+          "filename": "nist-ai-600-1-genai-profile.pdf",
+          "page_start": 4,
+          "page_end": 5,
+          "score": 0.54191113091271
+        },
+        {
+          "filename": "nist-ai-600-1-genai-profile.pdf",
+          "page_start": 44,
+          "page_end": 45,
+          "score": 0.5180019945902581
+        },
+        {
+          "filename": "nist-ai-600-1-genai-profile.pdf",
+          "page_start": 51,
+          "page_end": 51,
+          "score": 0.5177003439267833
+        }
+      ],
+      "response": {
+        "query_id": "c0b47a7a-a734-4af8-bd10-8ebd6b7d88d0",
+        "status": "answered",
+        "answer": "The profile names digital watermarking, metadata recording, digital fingerprinting, and human authentication as well-known provenance data tracking techniques [S1]. Provenance data tracking includes techniques to record metadata as well as overt and covert digital watermarks on content [S1]. Metadata recording techniques can be paired with metadata management tools and repositories to trace content origins and modifications, while content creation systems may require robust watermarking techniques and corresponding detectors [S2].",
+        "notice": null,
+        "claims": [
+          {
+            "text": "The profile names digital watermarking, metadata recording, digital fingerprinting, and human authentication as well-known provenance data tracking techniques.",
+            "source_ids": [
+              "S1"
+            ]
+          },
+          {
+            "text": "Provenance data tracking includes techniques to record metadata as well as overt and covert digital watermarks on content.",
+            "source_ids": [
+              "S1"
+            ]
+          },
+          {
+            "text": "Metadata recording techniques can be paired with metadata management tools and repositories to trace content origins and modifications, while content creation systems may require robust watermarking techniques and corresponding detectors.",
+            "source_ids": [
+              "S2"
+            ]
+          }
+        ],
+        "citations": [
+          {
+            "source_id": "S1",
+            "quote": "Some well-known techniques for provenance data tracking include digital watermarking, metadata recording, digital \ufb01ngerprinting, and human authentication, among others",
+            "document_id": "b0ac9c44-eaff-47f9-a2fe-d1abb83c5e62",
+            "chunk_id": "1e22c856-254f-4d26-9d9a-1925947f1eaf",
+            "filename": "nist-ai-600-1-genai-profile.pdf",
+            "page_start": 55,
+            "page_end": 55,
+            "heading": null
+          },
+          {
+            "source_id": "S1",
+            "quote": "It consists of techniques to record metadata as well as overt and covert digital watermarks on content",
+            "document_id": "b0ac9c44-eaff-47f9-a2fe-d1abb83c5e62",
+            "chunk_id": "1e22c856-254f-4d26-9d9a-1925947f1eaf",
+            "filename": "nist-ai-600-1-genai-profile.pdf",
+            "page_start": 55,
+            "page_end": 55,
+            "heading": null
+          },
+          {
+            "source_id": "S2",
+            "quote": "GAI systems used for content creation may require robust watermarking techniques and corresponding detectors to identify the source of content or metadata recording techniques and metadata management tools and repositories to trace content origins and modi\ufb01cations",
+            "document_id": "b0ac9c44-eaff-47f9-a2fe-d1abb83c5e62",
+            "chunk_id": "fb493a09-2ae0-4f0f-82af-7f96e9f2d27f",
+            "filename": "nist-ai-600-1-genai-profile.pdf",
+            "page_start": 55,
+            "page_end": 56,
+            "heading": null
+          }
+        ],
+        "retrieval": {
+          "chunks_retrieved": 6,
+          "top_score": 0.6317753193257374
+        },
+        "verification": {
+          "claims_supported": 3,
+          "claims_rejected": 0,
+          "citations_verified": 3,
+          "citations_rejected": 0,
+          "downgraded_from": null
+        },
+        "usage": {
+          "llm_called": true,
+          "model": "claude-sonnet-5-5",
+          "input_tokens": 5532,
+          "output_tokens": 393
+        },
+        "latency_ms": 3300
+      },
+      "error": null,
+      "claim_judgments": [],
+      "answer_judgment": null
+    },
+    {
+      "item": {
+        "id": "genai-executive-order",
+        "category": "answerable",
+        "question": "Under which executive order was the Generative AI Profile developed?",
+        "expected_sources": [
+          {
+            "file": "nist-ai-600-1-genai-profile.pdf",
+            "pages": [
+              5
+            ]
+          }
+        ],
+        "reference_answer": "Executive Order 14110 on Safe, Secure, and Trustworthy Artificial Intelligence.",
+        "acceptable_statuses": [
+          "answered",
+          "partial"
+        ]
+      },
+      "search_hits": [
+        {
+          "filename": "nist-ai-600-1-genai-profile.pdf",
+          "page_start": 1,
+          "page_end": 3,
+          "score": 0.5939469962499353
+        },
+        {
+          "filename": "nist-ai-600-1-genai-profile.pdf",
+          "page_start": 4,
+          "page_end": 5,
+          "score": 0.5727831928907993
+        },
+        {
+          "filename": "nist-ai-600-1-genai-profile.pdf",
+          "page_start": 62,
+          "page_end": 62,
+          "score": 0.5600292498230368
+        },
+        {
+          "filename": "nist-ai-600-1-genai-profile.pdf",
+          "page_start": 5,
+          "page_end": 6,
+          "score": 0.5532377672484751
+        },
+        {
+          "filename": "nist-ai-600-1-genai-profile.pdf",
+          "page_start": 60,
+          "page_end": 60,
+          "score": 0.5105427264252745
+        },
+        {
+          "filename": "nist-ai-rmf-1.0.pdf",
+          "page_start": 38,
+          "page_end": 40,
+          "score": 0.5060628433029601
+        }
+      ],
+      "response": {
+        "query_id": "eeb9b9c3-ab70-4c33-b05d-ccf9fb617bad",
+        "status": "answered",
+        "answer": "The Generative AI Profile was developed pursuant to President Biden's Executive Order (EO) 14110 on Safe, Secure, and Trustworthy Artificial Intelligence [S2]. It was specifically developed per Section 4.1(a)(i)(A) of EO 14110, which directs the Secretary of Commerce, acting through NIST, to develop a companion resource to the AI RMF for generative AI [S4].",
+        "notice": null,
+        "claims": [
+          {
+            "text": "The Generative AI Profile was developed pursuant to President Biden's Executive Order (EO) 14110 on Safe, Secure, and Trustworthy Artificial Intelligence.",
+            "source_ids": [
+              "S2"
+            ]
+          },
+          {
+            "text": "It was specifically developed per Section 4.1(a)(i)(A) of EO 14110, which directs the Secretary of Commerce, acting through NIST, to develop a companion resource to the AI RMF for generative AI.",
+            "source_ids": [
+              "S4"
+            ]
+          }
+        ],
+        "citations": [
+          {
+            "source_id": "S2",
+            "quote": "pursuant to President Biden\u2019s Executive Order (EO) 14110 on Safe, Secure, and Trustworthy Arti\ufb01cial Intelligence",
+            "document_id": "b0ac9c44-eaff-47f9-a2fe-d1abb83c5e62",
+            "chunk_id": "6e58a741-252f-4b99-8b62-ba5bd6f3af15",
+            "filename": "nist-ai-600-1-genai-profile.pdf",
+            "page_start": 4,
+            "page_end": 5,
+            "heading": null
+          },
+          {
+            "source_id": "S4",
+            "quote": "This pro\ufb01le was developed per Section 4.1(a)(i)(A) of EO 14110, which directs the Secretary of Commerce, acting through the Director of the National Institute of Standards and Technology (NIST), to develop a companion resource to the AI RMF",
+            "document_id": "b0ac9c44-eaff-47f9-a2fe-d1abb83c5e62",
+            "chunk_id": "52f01aa7-66c2-4f40-bc6a-e89a5e868177",
+            "filename": "nist-ai-600-1-genai-profile.pdf",
+            "page_start": 5,
+            "page_end": 6,
+            "heading": null
+          }
+        ],
+        "retrieval": {
+          "chunks_retrieved": 6,
+          "top_score": 0.5940312079921795
+        },
+        "verification": {
+          "claims_supported": 2,
+          "claims_rejected": 0,
+          "citations_verified": 2,
+          "citations_rejected": 0,
+          "downgraded_from": null
+        },
+        "usage": {
+          "llm_called": true,
+          "model": "claude-sonnet-5-5",
+          "input_tokens": 5532,
+          "output_tokens": 346
+        },
+        "latency_ms": 3374
+      },
+      "error": null,
+      "claim_judgments": [],
+      "answer_judgment": null
+    },
+    {
+      "item": {
+        "id": "genai-pentagon-image",
+        "category": "answerable",
+        "question": "What example does the Generative AI Profile give of synthetic content affecting the stock market?",
+        "expected_sources": [
+          {
+            "file": "nist-ai-600-1-genai-profile.pdf",
+            "pages": [
+              14
+            ]
+          }
+        ],
+        "reference_answer": "A synthetic image of a Pentagon blast went viral and briefly caused a drop in the stock market.",
+        "acceptable_statuses": [
+          "answered",
+          "partial"
+        ]
+      },
+      "search_hits": [
+        {
+          "filename": "nist-ai-600-1-genai-profile.pdf",
+          "page_start": 58,
+          "page_end": 59,
+          "score": 0.5170269952545092
+        },
+        {
+          "filename": "nist-ai-600-1-genai-profile.pdf",
+          "page_start": 58,
+          "page_end": 59,
+          "score": 0.5072837655280192
+        },
+        {
+          "filename": "nist-ai-600-1-genai-profile.pdf",
+          "page_start": 14,
+          "page_end": 15,
+          "score": 0.5065160584321616
+        },
+        {
+          "filename": "nist-ai-600-1-genai-profile.pdf",
+          "page_start": 60,
+          "page_end": 60,
+          "score": 0.5037948406237259
+        },
+        {
+          "filename": "nist-ai-600-1-genai-profile.pdf",
+          "page_start": 4,
+          "page_end": 5,
+          "score": 0.4976713674020101
+        },
+        {
+          "filename": "nist-ai-600-1-genai-profile.pdf",
+          "page_start": 54,
+          "page_end": 55,
+          "score": 0.4938208048489816
+        }
+      ],
+      "response": {
+        "query_id": "53ef9d81-1738-49f8-8d4e-ad4e554a88e6",
+        "status": "answered",
+        "answer": "The profile gives the example of a synthetic image of a Pentagon blast that went viral and briefly caused a drop in the stock market [S3].",
+        "notice": null,
+        "claims": [
+          {
+            "text": "The profile gives the example of a synthetic image of a Pentagon blast that went viral and briefly caused a drop in the stock market.",
+            "source_ids": [
+              "S3"
+            ]
+          }
+        ],
+        "citations": [
+          {
+            "source_id": "S3",
+            "quote": "a synthetic image of a Pentagon blast went viral and brie\ufb02y caused a drop in the stock market",
+            "document_id": "b0ac9c44-eaff-47f9-a2fe-d1abb83c5e62",
+            "chunk_id": "e80ac5a0-8759-4a27-a4a2-d807c4756a16",
+            "filename": "nist-ai-600-1-genai-profile.pdf",
+            "page_start": 14,
+            "page_end": 15,
+            "heading": null
+          }
+        ],
+        "retrieval": {
+          "chunks_retrieved": 6,
+          "top_score": 0.5170269952545092
+        },
+        "verification": {
+          "claims_supported": 1,
+          "claims_rejected": 0,
+          "citations_verified": 1,
+          "citations_rejected": 0,
+          "downgraded_from": null
+        },
+        "usage": {
+          "llm_called": true,
+          "model": "claude-sonnet-5-5",
+          "input_tokens": 5581,
+          "output_tokens": 122
+        },
+        "latency_ms": 2341
+      },
+      "error": null,
+      "claim_judgments": [],
+      "answer_judgment": null
+    },
+    {
+      "item": {
+        "id": "multi-cross-sectoral-profile",
+        "category": "multi_source",
+        "question": "What is a cross-sectoral profile, and why is the Generative AI Profile considered one?",
+        "expected_sources": [
+          {
+            "file": "nist-ai-rmf-1.0.pdf",
+            "pages": [
+              39
+            ]
+          },
+          {
+            "file": "nist-ai-600-1-genai-profile.pdf",
+            "pages": [
+              5
+            ]
+          }
+        ],
+        "reference_answer": "Cross-sectoral profiles cover risks of models or applications usable across use cases or sectors; the GAI profile is one because GAI covers such cross-sector risks (e.g., use of LLMs, cloud services, acquisition).",
+        "acceptable_statuses": [
+          "answered",
+          "partial"
+        ]
+      },
+      "search_hits": [
+        {
+          "filename": "nist-ai-600-1-genai-profile.pdf",
+          "page_start": 4,
+          "page_end": 5,
+          "score": 0.6122377543240488
+        },
+        {
+          "filename": "nist-ai-rmf-1.0.pdf",
+          "page_start": 38,
+          "page_end": 40,
+          "score": 0.5499651144432165
+        },
+        {
+          "filename": "nist-ai-600-1-genai-profile.pdf",
+          "page_start": 5,
+          "page_end": 6,
+          "score": 0.5216094170948407
+        },
+        {
+          "filename": "nist-ai-600-1-genai-profile.pdf",
+          "page_start": 1,
+          "page_end": 3,
+          "score": 0.49364533428901114
+        },
+        {
+          "filename": "nist-ai-600-1-genai-profile.pdf",
+          "page_start": 60,
+          "page_end": 60,
+          "score": 0.4894403629795703
+        },
+        {
+          "filename": "nist-ai-rmf-1.0.pdf",
+          "page_start": 37,
+          "page_end": 38,
+          "score": 0.4742867157813365
+        }
+      ],
+      "response": {
+        "query_id": "cc5f4f7b-a924-422b-8d4f-13ea5c4bccc2",
+        "status": "answered",
+        "answer": "Cross-sectoral profiles cover risks of models or applications that can be used across use cases or sectors [S2]. Cross-sectoral profiles can also address how to govern, map, measure, and manage risks for activities or business processes common across sectors, such as using large language models, cloud-based services, or acquisition [S1]. The Generative AI Profile is considered cross-sectoral because GAI covers risks of models or applications that can be used across use cases or sectors [S1].",
+        "notice": null,
+        "claims": [
+          {
+            "text": "Cross-sectoral profiles cover risks of models or applications that can be used across use cases or sectors.",
+            "source_ids": [
+              "S2"
+            ]
+          },
+          {
+            "text": "Cross-sectoral profiles can also address how to govern, map, measure, and manage risks for activities or business processes common across sectors, such as using large language models, cloud-based services, or acquisition.",
+            "source_ids": [
+              "S1"
+            ]
+          },
+          {
+            "text": "The Generative AI Profile is considered cross-sectoral because GAI covers risks of models or applications that can be used across use cases or sectors.",
+            "source_ids": [
+              "S1"
+            ]
+          }
+        ],
+        "citations": [
+          {
+            "source_id": "S2",
+            "quote": "AI RMF cross-sectoral profilescover risks of models or applications that can be used across use cases or sectors",
+            "document_id": "8c776c92-260f-4edf-acf3-6a70e3f0465f",
+            "chunk_id": "723cde77-aa5d-4b86-8b46-a3e12c8be4c9",
+            "filename": "nist-ai-rmf-1.0.pdf",
+            "page_start": 38,
+            "page_end": 40,
+            "heading": null
+          },
+          {
+            "source_id": "S1",
+            "quote": "Cross-sectoral pro\ufb01les can be used to govern, map, measure, and manage risks associated with activities or business processes common across sectors, such as the use of large language models (LLMs), cloud-based services, or acquisition",
+            "document_id": "b0ac9c44-eaff-47f9-a2fe-d1abb83c5e62",
+            "chunk_id": "6e58a741-252f-4b99-8b62-ba5bd6f3af15",
+            "filename": "nist-ai-600-1-genai-profile.pdf",
+            "page_start": 4,
+            "page_end": 5,
+            "heading": null
+          },
+          {
+            "source_id": "S1",
+            "quote": "As GAI covers risks of models or applications that can be used across use cases or sectors, this document is an AI RMF cross-sectoral pro\ufb01le",
+            "document_id": "b0ac9c44-eaff-47f9-a2fe-d1abb83c5e62",
+            "chunk_id": "6e58a741-252f-4b99-8b62-ba5bd6f3af15",
+            "filename": "nist-ai-600-1-genai-profile.pdf",
+            "page_start": 4,
+            "page_end": 5,
+            "heading": null
+          }
+        ],
+        "retrieval": {
+          "chunks_retrieved": 6,
+          "top_score": 0.6122410025702294
+        },
+        "verification": {
+          "claims_supported": 3,
+          "claims_rejected": 0,
+          "citations_verified": 3,
+          "citations_rejected": 0,
+          "downgraded_from": null
+        },
+        "usage": {
+          "llm_called": true,
+          "model": "claude-sonnet-5-5",
+          "input_tokens": 5642,
+          "output_tokens": 396
+        },
+        "latency_ms": 4112
+      },
+      "error": null,
+      "claim_judgments": [],
+      "answer_judgment": null
+    },
+    {
+      "item": {
+        "id": "multi-measure-dioptra",
+        "category": "multi_source",
+        "question": "Which AI RMF function covers measuring AI risks, and what testing environment does the Generative AI Profile suggest for evaluating GAI trustworthy characteristics?",
+        "expected_sources": [
+          {
+            "file": "nist-ai-rmf-1.0.pdf",
+            "pages": [
+              34
+            ]
+          },
+          {
+            "file": "nist-ai-600-1-genai-profile.pdf",
+            "pages": [
+              35
+            ]
+          }
+        ],
+        "reference_answer": "MEASURE; NIST Dioptra, a purpose-built testing environment.",
+        "acceptable_statuses": [
+          "answered",
+          "partial"
+        ]
+      },
+      "search_hits": [
+        {
+          "filename": "nist-ai-600-1-genai-profile.pdf",
+          "page_start": 4,
+          "page_end": 5,
+          "score": 0.7423753121213348
+        },
+        {
+          "filename": "nist-ai-600-1-genai-profile.pdf",
+          "page_start": 5,
+          "page_end": 6,
+          "score": 0.7234839582622861
+        },
+        {
+          "filename": "nist-ai-600-1-genai-profile.pdf",
+          "page_start": 60,
+          "page_end": 61,
+          "score": 0.6935574308810056
+        },
+        {
+          "filename": "nist-ai-rmf-1.0.pdf",
+          "page_start": 15,
+          "page_end": 17,
+          "score": 0.6891163228805205
+        },
+        {
+          "filename": "nist-ai-600-1-genai-profile.pdf",
+          "page_start": 34,
+          "page_end": 35,
+          "score": 0.688555850600192
+        },
+        {
+          "filename": "nist-ai-600-1-genai-profile.pdf",
+          "page_start": 52,
+          "page_end": 53,
+          "score": 0.6839095591040425
+        }
+      ],
+      "response": {
+        "query_id": "1082ba62-e57e-4076-bb9d-800364c8cf05",
+        "status": "answered",
+        "answer": "The Measure function is the one that covers measuring AI risks, as one of the four functions (govern, map, measure, manage) the profile's suggested actions support [S1][S5]. The Generative AI Profile suggests using a purpose-built testing environment such as NIST Dioptra to empirically evaluate GAI trustworthy characteristics [S5].",
+        "notice": null,
+        "claims": [
+          {
+            "text": "The Measure function is the one that covers measuring AI risks, as one of the four functions (govern, map, measure, manage) the profile's suggested actions support.",
+            "source_ids": [
+              "S1",
+              "S5"
+            ]
+          },
+          {
+            "text": "The Generative AI Profile suggests using a purpose-built testing environment such as NIST Dioptra to empirically evaluate GAI trustworthy characteristics.",
+            "source_ids": [
+              "S5"
+            ]
+          }
+        ],
+        "citations": [
+          {
+            "source_id": "S1",
+            "quote": "the document provides a set of suggested actions to help organizations govern, map, measure, and manage these risks",
+            "document_id": "b0ac9c44-eaff-47f9-a2fe-d1abb83c5e62",
+            "chunk_id": "6e58a741-252f-4b99-8b62-ba5bd6f3af15",
+            "filename": "nist-ai-600-1-genai-profile.pdf",
+            "page_start": 4,
+            "page_end": 5,
+            "heading": null
+          },
+          {
+            "source_id": "S5",
+            "quote": "MEASURE 2.5: The AI system to be deployed is demonstrated to be valid and reliable",
+            "document_id": "b0ac9c44-eaff-47f9-a2fe-d1abb83c5e62",
+            "chunk_id": "85fa5422-f0fa-4002-b68e-c63dc9fe0e91",
+            "filename": "nist-ai-600-1-genai-profile.pdf",
+            "page_start": 34,
+            "page_end": 35,
+            "heading": null
+          },
+          {
+            "source_id": "S5",
+            "quote": "Utilize a purpose-built testing environment such as NIST Dioptra to empirically evaluate GAI trustworthy characteristics",
+            "document_id": "b0ac9c44-eaff-47f9-a2fe-d1abb83c5e62",
+            "chunk_id": "85fa5422-f0fa-4002-b68e-c63dc9fe0e91",
+            "filename": "nist-ai-600-1-genai-profile.pdf",
+            "page_start": 34,
+            "page_end": 35,
+            "heading": null
+          }
+        ],
+        "retrieval": {
+          "chunks_retrieved": 6,
+          "top_score": 0.7423753121213348
+        },
+        "verification": {
+          "claims_supported": 2,
+          "claims_rejected": 0,
+          "citations_verified": 3,
+          "citations_rejected": 0,
+          "downgraded_from": null
+        },
+        "usage": {
+          "llm_called": true,
+          "model": "claude-sonnet-5-5",
+          "input_tokens": 5896,
+          "output_tokens": 846
+        },
+        "latency_ms": 8797
+      },
+      "error": null,
+      "claim_judgments": [],
+      "answer_judgment": null
+    },
+    {
+      "item": {
+        "id": "multi-harmful-bias",
+        "category": "multi_source",
+        "question": "How do the AI RMF and the Generative AI Profile describe the way AI can affect harmful bias?",
+        "expected_sources": [
+          {
+            "file": "nist-ai-rmf-1.0.pdf",
+            "pages": [
+              23
+            ]
+          },
+          {
+            "file": "nist-ai-600-1-genai-profile.pdf",
+            "pages": [
+              12
+            ]
+          }
+        ],
+        "reference_answer": "Both say AI systems can increase the speed and scale of biases and perpetuate and amplify harms to individuals, groups, communities, organizations, and society; the GAI profile adds examples such as text-to-image models underrepresenting women and racial minorities.",
+        "acceptable_statuses": [
+          "answered",
+          "partial"
+        ]
+      },
+      "search_hits": [
+        {
+          "filename": "nist-ai-rmf-1.0.pdf",
+          "page_start": 22,
+          "page_end": 23,
+          "score": 0.6924621117610517
+        },
+        {
+          "filename": "nist-ai-rmf-1.0.pdf",
+          "page_start": 23,
+          "page_end": 25,
+          "score": 0.6458118743831703
+        },
+        {
+          "filename": "nist-ai-600-1-genai-profile.pdf",
+          "page_start": 12,
+          "page_end": 13,
+          "score": 0.6395946301088165
+        },
+        {
+          "filename": "nist-ai-600-1-genai-profile.pdf",
+          "page_start": 60,
+          "page_end": 60,
+          "score": 0.6381393873312458
+        },
+        {
+          "filename": "nist-ai-600-1-genai-profile.pdf",
+          "page_start": 11,
+          "page_end": 12,
+          "score": 0.6336664803363966
+        },
+        {
+          "filename": "nist-ai-600-1-genai-profile.pdf",
+          "page_start": 7,
+          "page_end": 8,
+          "score": 0.6335308434754404
+        }
+      ],
+      "response": {
+        "query_id": "5ac1087d-52e1-4182-acdf-701146943065",
+        "status": "answered",
+        "answer": "The AI RMF says AI systems can increase the speed and scale of biases and perpetuate and amplify harms to individuals, groups, communities, organizations, and society [S1]. The AI RMF notes that bias is not always a negative phenomenon [S1]. The AI RMF identifies three major categories of AI bias: systemic, computational and statistical, and human-cognitive [S1]. The AI RMF says that systems in which harmful biases are mitigated are not necessarily fair [S1]. The Generative AI Profile says AI systems, including GAI systems, can increase the speed and scale at which harmful biases manifest and are acted upon [S3]. The Generative AI Profile says harmful bias in GAI models may stem from training data and can cause representational harms or perpetuate or exacerbate bias based on race, gender, disability, or other protected classes [S3]. The Generative AI Profile says harmful bias can lead to harms through performance disparities between subgroups or languages [S3]. The Generative AI Profile says bias is mutually reinforcing with undesired homogenization, and overly homogenized outputs can amplify harmful biases [S3].",
+        "notice": null,
+        "claims": [
+          {
+            "text": "The AI RMF says AI systems can increase the speed and scale of biases and perpetuate and amplify harms to individuals, groups, communities, organizations, and society.",
+            "source_ids": [
+              "S1"
+            ]
+          },
+          {
+            "text": "The AI RMF notes that bias is not always a negative phenomenon.",
+            "source_ids": [
+              "S1"
+            ]
+          },
+          {
+            "text": "The AI RMF identifies three major categories of AI bias: systemic, computational and statistical, and human-cognitive.",
+            "source_ids": [
+              "S1"
+            ]
+          },
+          {
+            "text": "The AI RMF says that systems in which harmful biases are mitigated are not necessarily fair.",
+            "source_ids": [
+              "S1"
+            ]
+          },
+          {
+            "text": "The Generative AI Profile says AI systems, including GAI systems, can increase the speed and scale at which harmful biases manifest and are acted upon.",
+            "source_ids": [
+              "S3"
+            ]
+          },
+          {
+            "text": "The Generative AI Profile says harmful bias in GAI models may stem from training data and can cause representational harms or perpetuate or exacerbate bias based on race, gender, disability, or other protected classes.",
+            "source_ids": [
+              "S3"
+            ]
+          },
+          {
+            "text": "The Generative AI Profile says harmful bias can lead to harms through performance disparities between subgroups or languages.",
+            "source_ids": [
+              "S3"
+            ]
+          },
+          {
+            "text": "The Generative AI Profile says bias is mutually reinforcing with undesired homogenization, and overly homogenized outputs can amplify harmful biases.",
+            "source_ids": [
+              "S3"
+            ]
+          }
+        ],
+        "citations": [
+          {
+            "source_id": "S1",
+            "quote": "AI sys- tems can potentially increase the speed and scale of biases and perpetuate and amplify harms to individuals, groups, communities, organizations, and society",
+            "document_id": "8c776c92-260f-4edf-acf3-6a70e3f0465f",
+            "chunk_id": "282e84da-15a3-4466-be6a-a8552d236a00",
+            "filename": "nist-ai-rmf-1.0.pdf",
+            "page_start": 22,
+            "page_end": 23,
+            "heading": null
+          },
+          {
+            "source_id": "S1",
+            "quote": "While bias is not always a negative phenomenon",
+            "document_id": "8c776c92-260f-4edf-acf3-6a70e3f0465f",
+            "chunk_id": "282e84da-15a3-4466-be6a-a8552d236a00",
+            "filename": "nist-ai-rmf-1.0.pdf",
+            "page_start": 22,
+            "page_end": 23,
+            "heading": null
+          },
+          {
+            "source_id": "S1",
+            "quote": "NIST has identified three major categories of AI bias to be considered and managed: systemic, computational and statistical, and human-cognitive",
+            "document_id": "8c776c92-260f-4edf-acf3-6a70e3f0465f",
+            "chunk_id": "282e84da-15a3-4466-be6a-a8552d236a00",
+            "filename": "nist-ai-rmf-1.0.pdf",
+            "page_start": 22,
+            "page_end": 23,
+            "heading": null
+          },
+          {
+            "source_id": "S1",
+            "quote": "Systems in which harmful biases are mitigated are not necessarily fair",
+            "document_id": "8c776c92-260f-4edf-acf3-6a70e3f0465f",
+            "chunk_id": "282e84da-15a3-4466-be6a-a8552d236a00",
+            "filename": "nist-ai-rmf-1.0.pdf",
+            "page_start": 22,
+            "page_end": 23,
+            "heading": null
+          },
+          {
+            "source_id": "S3",
+            "quote": "AI systems, including GAI systems, can increase the speed and scale at which harmful biases manifest and are acted upon",
+            "document_id": "b0ac9c44-eaff-47f9-a2fe-d1abb83c5e62",
+            "chunk_id": "83f701e2-95ae-4fcd-a5b9-e7c51eb5036a",
+            "filename": "nist-ai-600-1-genai-profile.pdf",
+            "page_start": 12,
+            "page_end": 13,
+            "heading": null
+          },
+          {
+            "source_id": "S3",
+            "quote": "Harmful bias in GAI models, which may stem from their training data, can also cause representational harms or perpetuate or exacerbate bias based on race, gender, disability, or other protected classes",
+            "document_id": "b0ac9c44-eaff-47f9-a2fe-d1abb83c5e62",
+            "chunk_id": "83f701e2-95ae-4fcd-a5b9-e7c51eb5036a",
+            "filename": "nist-ai-600-1-genai-profile.pdf",
+            "page_start": 12,
+            "page_end": 13,
+            "heading": null
+          },
+          {
+            "source_id": "S3",
+            "quote": "Harmful bias in GAI systems can also lead to harms via disparities between how a model performs for di\ufb00erent subgroups or languages",
+            "document_id": "b0ac9c44-eaff-47f9-a2fe-d1abb83c5e62",
+            "chunk_id": "83f701e2-95ae-4fcd-a5b9-e7c51eb5036a",
+            "filename": "nist-ai-600-1-genai-profile.pdf",
+            "page_start": 12,
+            "page_end": 13,
+            "heading": null
+          },
+          {
+            "source_id": "S3",
+            "quote": "Bias is mutually reinforcing with the problem of undesired homogenization",
+            "document_id": "b0ac9c44-eaff-47f9-a2fe-d1abb83c5e62",
+            "chunk_id": "83f701e2-95ae-4fcd-a5b9-e7c51eb5036a",
+            "filename": "nist-ai-600-1-genai-profile.pdf",
+            "page_start": 12,
+            "page_end": 13,
+            "heading": null
+          },
+          {
+            "source_id": "S3",
+            "quote": "Overly homogenized outputs can themselves be incorrect, or they may lead to unreliable decision-making or amplify harmful biases",
+            "document_id": "b0ac9c44-eaff-47f9-a2fe-d1abb83c5e62",
+            "chunk_id": "83f701e2-95ae-4fcd-a5b9-e7c51eb5036a",
+            "filename": "nist-ai-600-1-genai-profile.pdf",
+            "page_start": 12,
+            "page_end": 13,
+            "heading": null
+          }
+        ],
+        "retrieval": {
+          "chunks_retrieved": 6,
+          "top_score": 0.6924621117610517
+        },
+        "verification": {
+          "claims_supported": 8,
+          "claims_rejected": 0,
+          "citations_verified": 9,
+          "citations_rejected": 0,
+          "downgraded_from": null
+        },
+        "usage": {
+          "llm_called": true,
+          "model": "claude-sonnet-5-5",
+          "input_tokens": 5710,
+          "output_tokens": 943
+        },
+        "latency_ms": 5632
+      },
+      "error": null,
+      "claim_judgments": [],
+      "answer_judgment": null
+    },
+    {
+      "item": {
+        "id": "unans-eu-ai-act-fines",
+        "category": "unanswerable",
+        "question": "What fines does the EU AI Act impose for non-compliance?",
+        "expected_sources": [],
+        "reference_answer": null,
+        "acceptable_statuses": [
+          "insufficient_context"
+        ]
+      },
+      "search_hits": [
+        {
+          "filename": "nist-ai-600-1-genai-profile.pdf",
+          "page_start": 38,
+          "page_end": 39,
+          "score": 0.3972991907036103
+        },
+        {
+          "filename": "nist-ai-600-1-genai-profile.pdf",
+          "page_start": 17,
+          "page_end": 18,
+          "score": 0.38819731670784796
+        },
+        {
+          "filename": "nist-ai-600-1-genai-profile.pdf",
+          "page_start": 37,
+          "page_end": 38,
+          "score": 0.3871847614659927
+        },
+        {
+          "filename": "nist-ai-rmf-1.0.pdf",
+          "page_start": 41,
+          "page_end": 42,
+          "score": 0.3823917885635342
+        },
+        {
+          "filename": "nist-ai-600-1-genai-profile.pdf",
+          "page_start": 26,
+          "page_end": 27,
+          "score": 0.38054920668196046
+        },
+        {
+          "filename": "nist-ai-600-1-genai-profile.pdf",
+          "page_start": 29,
+          "page_end": 30,
+          "score": 0.38053423295193434
+        }
+      ],
+      "response": {
+        "query_id": "c5525ec6-7460-4a37-8fa5-d3e760d7810e",
+        "status": "insufficient_context",
+        "answer": "I couldn't find information about that in the provided documents.",
+        "notice": null,
+        "claims": [],
+        "citations": [],
+        "retrieval": {
+          "chunks_retrieved": 6,
+          "top_score": 0.3974461869350956
+        },
+        "verification": {
+          "claims_supported": 0,
+          "claims_rejected": 0,
+          "citations_verified": 0,
+          "citations_rejected": 0,
+          "downgraded_from": null
+        },
+        "usage": {
+          "llm_called": true,
+          "model": "claude-sonnet-5-5",
+          "input_tokens": 5884,
+          "output_tokens": 20
+        },
+        "latency_ms": 1919
+      },
+      "error": null,
+      "claim_judgments": [],
+      "answer_judgment": null
+    },
+    {
+      "item": {
+        "id": "unans-gpu-recommendation",
+        "category": "unanswerable",
+        "question": "Which GPU does NIST recommend for training generative AI models?",
+        "expected_sources": [],
+        "reference_answer": null,
+        "acceptable_statuses": [
+          "insufficient_context"
+        ]
+      },
+      "search_hits": [
+        {
+          "filename": "nist-ai-600-1-genai-profile.pdf",
+          "page_start": 1,
+          "page_end": 3,
+          "score": 0.49226548527213354
+        },
+        {
+          "filename": "nist-ai-600-1-genai-profile.pdf",
+          "page_start": 60,
+          "page_end": 60,
+          "score": 0.46375228120541445
+        },
+        {
+          "filename": "nist-ai-600-1-genai-profile.pdf",
+          "page_start": 58,
+          "page_end": 59,
+          "score": 0.43207217497843775
+        },
+        {
+          "filename": "nist-ai-600-1-genai-profile.pdf",
+          "page_start": 14,
+          "page_end": 15,
+          "score": 0.4318924412804276
+        },
+        {
+          "filename": "nist-ai-600-1-genai-profile.pdf",
+          "page_start": 3,
+          "page_end": 5,
+          "score": 0.431524140294113
+        },
+        {
+          "filename": "nist-ai-600-1-genai-profile.pdf",
+          "page_start": 62,
+          "page_end": 62,
+          "score": 0.4292711680154736
+        }
+      ],
+      "response": {
+        "query_id": "98576da0-5429-46ec-823e-cf6e8f1acac4",
+        "status": "insufficient_context",
+        "answer": "I couldn't find information about that in the provided documents.",
+        "notice": null,
+        "claims": [],
+        "citations": [],
+        "retrieval": {
+          "chunks_retrieved": 6,
+          "top_score": 0.49240667957111395
+        },
+        "verification": {
+          "claims_supported": 0,
+          "claims_rejected": 0,
+          "citations_verified": 0,
+          "citations_rejected": 0,
+          "downgraded_from": null
+        },
+        "usage": {
+          "llm_called": true,
+          "model": "claude-sonnet-5-5",
+          "input_tokens": 5439,
+          "output_tokens": 20
+        },
+        "latency_ms": 1479
+      },
+      "error": null,
+      "claim_judgments": [],
+      "answer_judgment": null
+    },
+    {
+      "item": {
+        "id": "unans-claude-red-team",
+        "category": "unanswerable",
+        "question": "What did Anthropic's Claude model card report about red-teaming results?",
+        "expected_sources": [],
+        "reference_answer": null,
+        "acceptable_statuses": [
+          "insufficient_context"
+        ]
+      },
+      "search_hits": [
+        {
+          "filename": "nist-ai-600-1-genai-profile.pdf",
+          "page_start": 54,
+          "page_end": 55,
+          "score": 0.5233385221386488
+        },
+        {
+          "filename": "nist-ai-600-1-genai-profile.pdf",
+          "page_start": 54,
+          "page_end": 54,
+          "score": 0.49583603066613025
+        },
+        {
+          "filename": "nist-ai-600-1-genai-profile.pdf",
+          "page_start": 34,
+          "page_end": 35,
+          "score": 0.43013048661125997
+        },
+        {
+          "filename": "nist-ai-600-1-genai-profile.pdf",
+          "page_start": 33,
+          "page_end": 34,
+          "score": 0.41829037024390003
+        },
+        {
+          "filename": "nist-ai-600-1-genai-profile.pdf",
+          "page_start": 38,
+          "page_end": 39,
+          "score": 0.41743948129969577
+        },
+        {
+          "filename": "nist-ai-600-1-genai-profile.pdf",
+          "page_start": 46,
+          "page_end": 47,
+          "score": 0.4126600799111235
+        }
+      ],
+      "response": {
+        "query_id": "cdfa4844-4859-48c5-a23b-b54097aa94e2",
+        "status": "insufficient_context",
+        "answer": "I couldn't find information about that in the provided documents.",
+        "notice": null,
+        "claims": [],
+        "citations": [],
+        "retrieval": {
+          "chunks_retrieved": 6,
+          "top_score": 0.5233636952325329
+        },
+        "verification": {
+          "claims_supported": 0,
+          "claims_rejected": 0,
+          "citations_verified": 0,
+          "citations_rejected": 0,
+          "downgraded_from": null
+        },
+        "usage": {
+          "llm_called": true,
+          "model": "claude-sonnet-5-5",
+          "input_tokens": 5795,
+          "output_tokens": 20
+        },
+        "latency_ms": 1772
+      },
+      "error": null,
+      "claim_judgments": [],
+      "answer_judgment": null
+    },
+    {
+      "item": {
+        "id": "unans-workshop-attendance",
+        "category": "unanswerable",
+        "question": "How many people attended the AI RMF development workshops?",
+        "expected_sources": [],
+        "reference_answer": null,
+        "acceptable_statuses": [
+          "insufficient_context",
+          "partial"
+        ]
+      },
+      "search_hits": [
+        {
+          "filename": "nist-ai-rmf-1.0.pdf",
+          "page_start": 46,
+          "page_end": 47,
+          "score": 0.5002093295367224
+        },
+        {
+          "filename": "nist-ai-rmf-1.0.pdf",
+          "page_start": 24,
+          "page_end": 26,
+          "score": 0.4931253033980735
+        },
+        {
+          "filename": "nist-ai-rmf-1.0.pdf",
+          "page_start": 47,
+          "page_end": 48,
+          "score": 0.48241720318375325
+        },
+        {
+          "filename": "nist-ai-rmf-1.0.pdf",
+          "page_start": 1,
+          "page_end": 3,
+          "score": 0.4819613787810858
+        },
+        {
+          "filename": "nist-ai-rmf-1.0.pdf",
+          "page_start": 3,
+          "page_end": 5,
+          "score": 0.4733652014933586
+        },
+        {
+          "filename": "nist-ai-rmf-1.0.pdf",
+          "page_start": 37,
+          "page_end": 38,
+          "score": 0.46139735016533034
+        }
+      ],
+      "response": {
+        "query_id": "2b2f1768-e9de-4f8c-b050-8a288eeb78b4",
+        "status": "insufficient_context",
+        "answer": "I couldn't find information about that in the provided documents.",
+        "notice": null,
+        "claims": [],
+        "citations": [],
+        "retrieval": {
+          "chunks_retrieved": 6,
+          "top_score": 0.5002093295367224
+        },
+        "verification": {
+          "claims_supported": 0,
+          "claims_rejected": 0,
+          "citations_verified": 0,
+          "citations_rejected": 0,
+          "downgraded_from": null
+        },
+        "usage": {
+          "llm_called": true,
+          "model": "claude-sonnet-5-5",
+          "input_tokens": 5630,
+          "output_tokens": 20
+        },
+        "latency_ms": 2362
+      },
+      "error": null,
+      "claim_judgments": [],
+      "answer_judgment": null
+    },
+    {
+      "item": {
+        "id": "unans-certification-cost",
+        "category": "unanswerable",
+        "question": "How much does official AI RMF certification cost?",
+        "expected_sources": [],
+        "reference_answer": null,
+        "acceptable_statuses": [
+          "insufficient_context",
+          "partial"
+        ]
+      },
+      "search_hits": [
+        {
+          "filename": "nist-ai-rmf-1.0.pdf",
+          "page_start": 1,
+          "page_end": 3,
+          "score": 0.5222869445605451
+        },
+        {
+          "filename": "nist-ai-rmf-1.0.pdf",
+          "page_start": 47,
+          "page_end": 48,
+          "score": 0.47444378813372134
+        },
+        {
+          "filename": "nist-ai-rmf-1.0.pdf",
+          "page_start": 46,
+          "page_end": 47,
+          "score": 0.4676564697939003
+        },
+        {
+          "filename": "nist-ai-rmf-1.0.pdf",
+          "page_start": 3,
+          "page_end": 5,
+          "score": 0.467226703442263
+        },
+        {
+          "filename": "nist-ai-rmf-1.0.pdf",
+          "page_start": 43,
+          "page_end": 44,
+          "score": 0.46608154899190835
+        },
+        {
+          "filename": "nist-ai-rmf-1.0.pdf",
+          "page_start": 7,
+          "page_end": 8,
+          "score": 0.46070073216463747
+        }
+      ],
+      "response": {
+        "query_id": "9fb535d1-0a83-4625-aa0f-bdf1b0d909ec",
+        "status": "insufficient_context",
+        "answer": "I couldn't find information about that in the provided documents.",
+        "notice": null,
+        "claims": [],
+        "citations": [],
+        "retrieval": {
+          "chunks_retrieved": 6,
+          "top_score": 0.5222869445605451
+        },
+        "verification": {
+          "claims_supported": 0,
+          "claims_rejected": 0,
+          "citations_verified": 0,
+          "citations_rejected": 0,
+          "downgraded_from": null
+        },
+        "usage": {
+          "llm_called": true,
+          "model": "claude-sonnet-5-5",
+          "input_tokens": 5537,
+          "output_tokens": 20
+        },
+        "latency_ms": 2192
+      },
+      "error": null,
+      "claim_judgments": [],
+      "answer_judgment": null
+    },
+    {
+      "item": {
+        "id": "unans-penalties",
+        "category": "unanswerable",
+        "question": "What penalties does NIST impose on organizations that do not follow the AI RMF?",
+        "expected_sources": [],
+        "reference_answer": null,
+        "acceptable_statuses": [
+          "insufficient_context",
+          "partial"
+        ]
+      },
+      "search_hits": [
+        {
+          "filename": "nist-ai-rmf-1.0.pdf",
+          "page_start": 1,
+          "page_end": 3,
+          "score": 0.6250108422170958
+        },
+        {
+          "filename": "nist-ai-rmf-1.0.pdf",
+          "page_start": 43,
+          "page_end": 44,
+          "score": 0.6071668648947636
+        },
+        {
+          "filename": "nist-ai-rmf-1.0.pdf",
+          "page_start": 3,
+          "page_end": 5,
+          "score": 0.5782719011675237
+        },
+        {
+          "filename": "nist-ai-rmf-1.0.pdf",
+          "page_start": 23,
+          "page_end": 25,
+          "score": 0.5709720643406644
+        },
+        {
+          "filename": "nist-ai-rmf-1.0.pdf",
+          "page_start": 12,
+          "page_end": 13,
+          "score": 0.5628085524092703
+        },
+        {
+          "filename": "nist-ai-rmf-1.0.pdf",
+          "page_start": 13,
+          "page_end": 14,
+          "score": 0.5613096911207923
+        }
+      ],
+      "response": {
+        "query_id": "de9279ec-a9c1-46ee-bd97-6120ee507c3b",
+        "status": "insufficient_context",
+        "answer": "I couldn't find information about that in the provided documents.",
+        "notice": null,
+        "claims": [],
+        "citations": [],
+        "retrieval": {
+          "chunks_retrieved": 6,
+          "top_score": 0.6250108422170958
+        },
+        "verification": {
+          "claims_supported": 0,
+          "claims_rejected": 0,
+          "citations_verified": 0,
+          "citations_rejected": 0,
+          "downgraded_from": null
+        },
+        "usage": {
+          "llm_called": true,
+          "model": "claude-sonnet-5-5",
+          "input_tokens": 5764,
+          "output_tokens": 20
+        },
+        "latency_ms": 2346
+      },
+      "error": null,
+      "claim_judgments": [],
+      "answer_judgment": null
+    },
+    {
+      "item": {
+        "id": "ood-cookies",
+        "category": "out_of_domain",
+        "question": "What's a good recipe for chocolate chip cookies?",
+        "expected_sources": [],
+        "reference_answer": null,
+        "acceptable_statuses": [
+          "insufficient_context"
+        ]
+      },
+      "search_hits": [
+        {
+          "filename": "nist-ai-600-1-genai-profile.pdf",
+          "page_start": 1,
+          "page_end": 3,
+          "score": 0.09626276077054075
+        },
+        {
+          "filename": "nist-ai-600-1-genai-profile.pdf",
+          "page_start": 62,
+          "page_end": 63,
+          "score": 0.09097200856651855
+        },
+        {
+          "filename": "nist-ai-600-1-genai-profile.pdf",
+          "page_start": 59,
+          "page_end": 59,
+          "score": 0.08533736042068862
+        },
+        {
+          "filename": "nist-ai-600-1-genai-profile.pdf",
+          "page_start": 58,
+          "page_end": 59,
+          "score": 0.08259138721451542
+        },
+        {
+          "filename": "nist-ai-rmf-1.0.pdf",
+          "page_start": 17,
+          "page_end": 18,
+          "score": 0.08054842316802502
+        },
+        {
+          "filename": "nist-ai-600-1-genai-profile.pdf",
+          "page_start": 58,
+          "page_end": 59,
+          "score": 0.07868043867209451
+        }
+      ],
+      "response": {
+        "query_id": "478812d4-81a1-4e75-8a4b-5d8b9afe892f",
+        "status": "insufficient_context",
+        "answer": "I couldn't find information about that in the provided documents.",
+        "notice": null,
+        "claims": [],
+        "citations": [],
+        "retrieval": {
+          "chunks_retrieved": 6,
+          "top_score": 0.09626276077054075
+        },
+        "verification": {
+          "claims_supported": 0,
+          "claims_rejected": 0,
+          "citations_verified": 0,
+          "citations_rejected": 0,
+          "downgraded_from": null
+        },
+        "usage": {
+          "llm_called": false,
+          "model": null,
+          "input_tokens": null,
+          "output_tokens": null
+        },
+        "latency_ms": 247
+      },
+      "error": null,
+      "claim_judgments": [],
+      "answer_judgment": null
+    },
+    {
+      "item": {
+        "id": "ood-world-cup",
+        "category": "out_of_domain",
+        "question": "Who won the 2022 FIFA World Cup?",
+        "expected_sources": [],
+        "reference_answer": null,
+        "acceptable_statuses": [
+          "insufficient_context"
+        ]
+      },
+      "search_hits": [
+        {
+          "filename": "nist-ai-600-1-genai-profile.pdf",
+          "page_start": 63,
+          "page_end": 64,
+          "score": 0.13618056991428107
+        },
+        {
+          "filename": "nist-ai-600-1-genai-profile.pdf",
+          "page_start": 63,
+          "page_end": 63,
+          "score": 0.13589021050156647
+        },
+        {
+          "filename": "nist-ai-600-1-genai-profile.pdf",
+          "page_start": 58,
+          "page_end": 59,
+          "score": 0.12669567952555738
+        },
+        {
+          "filename": "nist-ai-600-1-genai-profile.pdf",
+          "page_start": 59,
+          "page_end": 59,
+          "score": 0.12505402559619916
+        },
+        {
+          "filename": "nist-ai-600-1-genai-profile.pdf",
+          "page_start": 61,
+          "page_end": 62,
+          "score": 0.11685003833364727
+        },
+        {
+          "filename": "nist-ai-600-1-genai-profile.pdf",
+          "page_start": 58,
+          "page_end": 59,
+          "score": 0.11207423780361037
+        }
+      ],
+      "response": {
+        "query_id": "6cfe62b0-63b4-4ed7-acc2-1ff717226adc",
+        "status": "insufficient_context",
+        "answer": "I couldn't find information about that in the provided documents.",
+        "notice": null,
+        "claims": [],
+        "citations": [],
+        "retrieval": {
+          "chunks_retrieved": 6,
+          "top_score": 0.13618056991428107
+        },
+        "verification": {
+          "claims_supported": 0,
+          "claims_rejected": 0,
+          "citations_verified": 0,
+          "citations_rejected": 0,
+          "downgraded_from": null
+        },
+        "usage": {
+          "llm_called": false,
+          "model": null,
+          "input_tokens": null,
+          "output_tokens": null
+        },
+        "latency_ms": 217
+      },
+      "error": null,
+      "claim_judgments": [],
+      "answer_judgment": null
+    },
+    {
+      "item": {
+        "id": "ood-router",
+        "category": "out_of_domain",
+        "question": "How do I reset my home Wi-Fi router?",
+        "expected_sources": [],
+        "reference_answer": null,
+        "acceptable_statuses": [
+          "insufficient_context"
+        ]
+      },
+      "search_hits": [
+        {
+          "filename": "nist-ai-600-1-genai-profile.pdf",
+          "page_start": 45,
+          "page_end": 46,
+          "score": 0.06639359732620842
+        },
+        {
+          "filename": "nist-ai-600-1-genai-profile.pdf",
+          "page_start": 46,
+          "page_end": 47,
+          "score": 0.06091402309918814
+        },
+        {
+          "filename": "nist-ai-rmf-1.0.pdf",
+          "page_start": 1,
+          "page_end": 3,
+          "score": 0.056673997171331814
+        },
+        {
+          "filename": "nist-ai-600-1-genai-profile.pdf",
+          "page_start": 44,
+          "page_end": 45,
+          "score": 0.05221862529938104
+        },
+        {
+          "filename": "nist-ai-600-1-genai-profile.pdf",
+          "page_start": 46,
+          "page_end": 47,
+          "score": 0.050624257294304864
+        },
+        {
+          "filename": "nist-ai-rmf-1.0.pdf",
+          "page_start": 28,
+          "page_end": 28,
+          "score": 0.04874852253104378
+        }
+      ],
+      "response": {
+        "query_id": "0cdfb124-25a8-4fec-ac0c-b2166bf6bf75",
+        "status": "insufficient_context",
+        "answer": "I couldn't find information about that in the provided documents.",
+        "notice": null,
+        "claims": [],
+        "citations": [],
+        "retrieval": {
+          "chunks_retrieved": 6,
+          "top_score": 0.06639359732620842
+        },
+        "verification": {
+          "claims_supported": 0,
+          "claims_rejected": 0,
+          "citations_verified": 0,
+          "citations_rejected": 0,
+          "downgraded_from": null
+        },
+        "usage": {
+          "llm_called": false,
+          "model": null,
+          "input_tokens": null,
+          "output_tokens": null
+        },
+        "latency_ms": 417
+      },
+      "error": null,
+      "claim_judgments": [],
+      "answer_judgment": null
+    }
+  ]
+}

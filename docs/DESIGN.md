@@ -293,21 +293,26 @@ Interview line: "The model never writes the answer. It proposes claims with evid
 
 Honest limit: quote matching proves the quote exists, not that the claim follows from it (entailment). A model could pair a true quote with an overreaching claim. The groundedness eval (M7) measures how often that happens. State this in README Limitations.
 
-## 18. Evaluation Strategy
-- **Corpus:** 2 to 3 NIST AI RMF documents (public domain).
-- **Golden set:** ~30 hand-written questions in `evals/golden.jsonl`:
-  - ~20 answerable (each tagged with expected document + page)
-  - ~5 multi-part / cross-document
-  - ~5 **unanswerable** (plausible but not in corpus)
-- **Retrieval metrics:** Hit Rate@k, MRR (did the right page come back, and how high).
-- **Answer metrics:**
-  - Citation validity rate (from our verifier)
-  - Refusal accuracy (unanswerable → refused; answerable → not refused)
-  - Groundedness score via LLM-as-judge (small model, 1 to 5 rubric). Spot-check judge manually and say so.
-  - Latency p50/p95, tokens per query.
-- **Output:** `python -m evals.run --config ...` writes `docs/evals/YYYY-MM-DD-<config>.md`. Committed. README shows the table.
-- **Use it to make decisions:** chunk size, top_k, threshold, vector vs hybrid. Each decision references an eval report.
+## 18. Evaluation Strategy (built in M7)
+- **Corpus:** the two public-domain NIST documents the demo serves (AI 100-1 AI RMF, 48 pages; AI 600-1 Generative AI Profile, 64 pages).
+- **Golden set:** `evals/golden.jsonl`, 33 hand-written questions:
+  - 21 answerable, each with expected document + PDF page(s) and a reference answer
+  - 3 multi-source (need both documents)
+  - 6 unanswerable but on-topic (EU AI Act fines, GPU recommendations, certification cost...). Absence verified by full-text search of both documents. 3 of them accept `partial` (e.g. "three workshops" is in the text, attendance numbers are not).
+  - 3 out-of-domain (cookies, World Cup, routers)
+  - Validated by tests: schema, consistency rules, filenames match `seed_demo.py`.
+- **Black-box runner:** `python -m evals.run <url>` sends each question to `/search` (top 6) and `/query` over HTTP, paced under the rate limits, retrying 429s via `Retry-After`. It measures the deployed system, not a re-implementation. One failing question is recorded, not fatal; errors count as failures in every metric.
+- **Retrieval metrics:** Hit@1/3/6 and MRR against expected pages; multi-source coverage (both documents retrieved).
+- **Answer metrics:** status accuracy, false refusals (and how many were retrieval misses), unanswerable handled without an unsupported answer, out-of-domain refused by the gate with no LLM call, citation page hit, claims proposed/shown/dropped by the verifier, latency p50/p95, tokens.
+- **LLM judge (`--judge`, Haiku 5.5):** (1) claim support: is each SHOWN claim actually supported by its verified quotes (the entailment gap the verifier can't close); (2) answer correctness vs the reference answer. Inputs are HTML-escaped; every verdict has a one-sentence reason in the report for human spot-checks.
+- **Gate calibration:** top-1 similarity per category plus a threshold sweep. Rule: middle of the gap between the highest out-of-domain and lowest answerable score, rounded down to 0.05.
+- **Output:** `docs/evals/YYYY-MM-DD-<label>.md` (human report) + `.json` (raw results, re-scorable with `--from-json` without API calls). Committed.
 - Real numbers only. Never fabricate results.
+
+**What the first run found (2026-10-12 baseline):**
+1. A real bug: claim-format answers are wordier than prose; one list answer hit the 1024-token output cap and returned 502 (another used 943 tokens). Fix: `LLM_MAX_TOKENS` 2048 + "at most 8 claims, group long lists" in the prompt.
+2. Both false refusals were retrieval misses (expected page not in the top 6), not model failures: the model correctly refused from what it was given. This is the measured case for hybrid retrieval (M8).
+3. The 0.20 gate threshold is confirmed by data: out-of-domain max 0.14, answerable min 0.31. On-topic unanswerable questions score 0.40-0.63, so no threshold can catch them; the model's refusal handled all 6.
 
 ## 19. Testing Strategy
 | Level | What | Notes |
