@@ -1,0 +1,56 @@
+# Local development stack: Postgres + pgvector, a one-shot migration job, and the API.
+#
+#   docker compose up --build      # everything, http://localhost:8000/docs
+#   docker compose up -d db        # just the database (for running pytest/uvicorn on your machine)
+#   docker compose down            # stop (data is kept in the pgdata volume)
+#   docker compose down -v         # stop and DELETE the database volume
+#
+# The credentials below are for a throwaway local database only. Production
+# credentials live in a secret manager, never in this file.
+
+services:
+  db:
+    image: pgvector/pgvector:0.8.7-pg17
+    environment:
+      POSTGRES_USER: grounded
+      POSTGRES_PASSWORD: grounded
+      POSTGRES_DB: grounded
+    ports:
+      # Host port 5433, not 5432: avoids clashing with a Postgres installed
+      # directly on the machine. Containers still reach this DB at db:5432.
+      - "5433:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U grounded -d grounded"]
+      interval: 2s
+      timeout: 3s
+      retries: 15
+
+  # Runs `alembic upgrade head` once, then exits. The app waits for it to succeed,
+  # so the API never starts against an outdated schema.
+  migrate:
+    build: .
+    image: grounded-rag:local
+    command: ["alembic", "upgrade", "head"]
+    environment:
+      DATABASE_URL: postgresql+asyncpg://grounded:grounded@db:5432/grounded
+    depends_on:
+      db:
+        condition: service_healthy
+
+  app:
+    build: .
+    image: grounded-rag:local
+    environment:
+      APP_ENV: local
+      LOG_LEVEL: INFO
+      DATABASE_URL: postgresql+asyncpg://grounded:grounded@db:5432/grounded
+    ports:
+      - "8000:8000"
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+
+volumes:
+  pgdata:

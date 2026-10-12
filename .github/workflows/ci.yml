@@ -12,6 +12,28 @@ jobs:
   checks:
     # Pinned runner image so an OS upgrade can't silently change CI.
     runs-on: ubuntu-24.04
+
+    # A real Postgres + pgvector for integration tests (same image as docker-compose).
+    services:
+      postgres:
+        image: pgvector/pgvector:0.8.7-pg17
+        env:
+          POSTGRES_USER: grounded
+          POSTGRES_PASSWORD: grounded
+          POSTGRES_DB: grounded
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U grounded -d grounded"
+          --health-interval 2s
+          --health-timeout 3s
+          --health-retries 15
+
+    env:
+      APP_ENV: test
+      DATABASE_URL: postgresql+asyncpg://grounded:grounded@localhost:5432/grounded
+      REQUIRE_DB: "1" # integration tests must FAIL, not skip, if the DB is missing
+
     steps:
       # Actions pinned to exact commit SHAs: a tag can be moved, a SHA cannot.
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -30,7 +52,19 @@ jobs:
         run: uv run ruff format --check .
 
       - name: Type check
-        run: uv run mypy src
+        run: uv run mypy src tests migrations
+
+      - name: Apply migrations
+        run: uv run alembic upgrade head
 
       - name: Tests
         run: uv run pytest
+
+  docker:
+    # Proves the production image builds on every push.
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Build image
+        run: docker build --tag grounded-rag:ci .
