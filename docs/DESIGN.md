@@ -177,6 +177,7 @@ grounded-rag/
 | POST | `/v1/collections/{id}/documents` | admin | Upload + ingest |
 | GET | `/v1/collections/{id}/documents` | none | List docs |
 | GET | `/v1/documents/{id}` | none | Doc detail + status |
+| DELETE | `/v1/collections/{id}` | admin | Delete collection + its docs, chunks, query logs |
 | DELETE | `/v1/documents/{id}` | admin | Delete doc + chunks |
 | POST | `/v1/collections/{id}/search` | none | Retrieval only (debug/eval) |
 | POST | `/v1/collections/{id}/query` | none, rate limited | Cited answer |

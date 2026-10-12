@@ -6,9 +6,21 @@
 
 **A RAG knowledge assistant that answers only from your documents, cites the exact page and passage for every claim, and says so when the answer isn't there.**
 
-> Status: under active development. See the [design doc](docs/DESIGN.md) for the full architecture and roadmap.
+## Live demo
 
-## What it will do
+**https://grounded-1004795551444.us-east4.run.app**
+
+Preloaded with two public NIST documents (AI Risk Management Framework 1.0 and the Generative AI
+Profile, 112 pages). Ask something they cover ("What are the four functions of the AI RMF
+Core?") and something they don't ("What is the capital of France?") to see a cited answer and
+a refusal. First load after idle takes a few seconds (scales to zero).
+
+Rate limited per IP with a global daily cap on LLM calls. Uploads require an admin key.
+
+> Status: deployed and usable. Evaluation harness, hybrid retrieval and streaming are next.
+> See the [design doc](docs/DESIGN.md) for the full architecture and roadmap.
+
+## What it does
 
 - Upload PDFs, Markdown, and text files
 - Ask questions in plain English
@@ -27,7 +39,7 @@ FastAPI · PostgreSQL + pgvector · SQLAlchemy 2.0 (async) + Alembic · Claude (
 - [x] M3: Vector search
 - [x] M4: Cited answers with citation verification and refusals
 - [x] M5: Web UI
-- [ ] M6: Deploy
+- [x] M6: Deploy (Cloud Run + Neon, rate limits, daily LLM budget)
 - [ ] M7: Evaluation harness
 - [ ] M8: Hybrid retrieval
 - [ ] M9: Streaming
