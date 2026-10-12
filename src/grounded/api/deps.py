@@ -17,6 +17,7 @@ from grounded.config import Settings
 from grounded.errors import AuthenticationError, ProviderNotConfiguredError, WritesDisabledError
 from grounded.ingestion.service import IngestionService
 from grounded.providers.base import Embedder
+from grounded.retrieval.retriever import Retriever
 
 API_KEY_HEADER = APIKeyHeader(name="X-API-Key", auto_error=False)
 
@@ -71,3 +72,10 @@ def get_ingestion_service(
 
 AdminDep = Depends(require_admin)
 IngestionServiceDep = Annotated[IngestionService, Depends(get_ingestion_service)]
+
+
+def get_retriever(session: SessionDep, embedder: EmbedderDep, settings: SettingsDep) -> Retriever:
+    return Retriever(session=session, embedder=embedder, settings=settings)
+
+
+RetrieverDep = Annotated[Retriever, Depends(get_retriever)]
