@@ -109,25 +109,40 @@ def _post(
 async def judge_all(
     results: list[ItemResult], judge: Judge, log: Callable[[str], None] = print
 ) -> None:
-    """Fill in judge verdicts. Only shown claims and non-refused answers are judged."""
+    """Fill in judge verdicts. Only shown claims and non-refused answers are judged.
+
+    A judge failure is recorded on that question and the run continues: one bad
+    judge call must not throw away every other verdict.
+    """
     for result in results:
         response = result.response
         if response is None or response["status"] == "insufficient_context":
             continue
-        quotes_by_source: dict[str, list[str]] = {}
-        for citation in response["citations"]:
-            quotes_by_source.setdefault(citation["source_id"], []).append(citation["quote"])
-        for claim in response["claims"]:
-            quotes = [q for sid in claim["source_ids"] for q in quotes_by_source.get(sid, [])]
-            verdict = await judge.judge_claim(claim["text"], quotes)
-            result.claim_judgments.append(
-                ClaimJudgment(claim=claim["text"], verdict=verdict.verdict, reason=verdict.reason)
-            )
-        if result.item.reference_answer:
-            result.answer_judgment = await judge.judge_answer(
-                result.item.question, response["answer"], result.item.reference_answer
-            )
+        try:
+            await _judge_one(result, response, judge)
+        except Exception as exc:  # recorded per question, like collection errors
+            result.claim_judgments, result.answer_judgment = [], None
+            first_line = str(exc).splitlines()[0] if str(exc) else ""
+            result.judge_error = f"{type(exc).__name__}: {first_line}"[:300]
+            log(f"  judge FAILED {result.item.id}: {result.judge_error}")
+            continue
         log(f"  judged {result.item.id}")
+
+
+async def _judge_one(result: ItemResult, response: dict[str, Any], judge: Judge) -> None:
+    quotes_by_source: dict[str, list[str]] = {}
+    for citation in response["citations"]:
+        quotes_by_source.setdefault(citation["source_id"], []).append(citation["quote"])
+    for claim in response["claims"]:
+        quotes = [q for sid in claim["source_ids"] for q in quotes_by_source.get(sid, [])]
+        verdict = await judge.judge_claim(claim["text"], quotes)
+        result.claim_judgments.append(
+            ClaimJudgment(claim=claim["text"], verdict=verdict.verdict, reason=verdict.reason)
+        )
+    if result.item.reference_answer:
+        result.answer_judgment = await judge.judge_answer(
+            result.item.question, response["answer"], result.item.reference_answer
+        )
 
 
 def _git_commit() -> str:
@@ -207,9 +222,13 @@ def main(argv: list[str] | None = None) -> int:
                 "notes": args.notes,
             }
         if judge is not None:
-            print(f"\nJudging with {judge.model}")
+            # Save the collected answers first: if judging dies, nothing paid for is lost
+            # (re-judge later with --from-json).
+            write_report(results, out_dir=args.out_dir, label=meta["label"], meta=meta)
+            print(f"\nSaved answers. Judging with {judge.model}")
             for result in results:  # re-judging replaces old verdicts
                 result.claim_judgments, result.answer_judgment = [], None
+                result.judge_error = None
             asyncio.run(judge_all(results, judge))
             meta["judge_model"] = judge.model
     except EvalAbortedError as exc:

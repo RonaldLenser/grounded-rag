@@ -314,6 +314,10 @@ Honest limit: quote matching proves the quote exists, not that the claim follows
 2. Both false refusals were retrieval misses (expected page not in the top 6), not model failures: the model correctly refused from what it was given. This is the measured case for hybrid retrieval (M8).
 3. The 0.20 gate threshold is confirmed by data: out-of-domain max 0.14, answerable min 0.31. On-topic unanswerable questions score 0.40-0.63, so no threshold can catch them; the model's refusal handled all 6.
 
+**After the fix (2026-10-12 v1, judged, [report](evals/2026-10-12-v1.md)):** 0 errors; 22/24 answerable answered, 22/22 judged correct vs reference; 6/6 unanswerable and 3/3 off-topic refused; 78 claims shown, 0 dropped by the verifier, 72 fully supported by their quotes, 6 partially, 0 unsupported; Hit@6 92%, MRR 0.81; p50 2.9s, p95 6.5s.
+- Manual spot-check of the judge's "partial" verdicts: the extra detail was in the source document but outside the quoted span (quote chosen too narrow), or attribution wording. This is the entailment gap the verifier can't close, measured: it exists, it is small, and in this sample it did not introduce false facts.
+- The eval harness itself had two bugs found in use: a 300-token judge cap (judge reasons got cut off) and a judge failure aborting the whole run before results were saved. Fixed: 1024 cap, answers saved before judging, per-question judge errors.
+
 ## 19. Testing Strategy
 | Level | What | Notes |
 |---|---|---|
