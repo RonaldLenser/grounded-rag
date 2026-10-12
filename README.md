@@ -24,7 +24,7 @@ Rate limited per IP with a global daily cap on LLM calls. Uploads require an adm
 
 - Upload PDFs, Markdown, and text files
 - Ask questions in plain English
-- Get answers with citations that are **verified in code**, not trusted from the model
+- Get answers built from claims whose quotes are **verified in code**; a claim that fails verification is dropped, never shown
 - Get an explicit "not in your documents" instead of a confident guess
 
 ## Stack
@@ -115,6 +115,13 @@ uv run python scripts/smoke_test.py https://<url>    # a deployed instance
 
 Google Cloud Run + Neon Postgres, with per-IP rate limits and a global daily LLM budget.
 Step-by-step guide: [docs/DEPLOY.md](docs/DEPLOY.md).
+
+### Privacy and data retention
+
+The demo stores each question's raw text in the `query_logs` table (for debugging and evals),
+with no automatic expiry; deleting a collection deletes its logs. Answers are not stored, and
+application logs never contain question or answer text. Don't ask the public demo anything
+personal. Details: "Data retention" in [docs/DESIGN.md](docs/DESIGN.md).
 
 ### Tests
 

@@ -15,6 +15,11 @@ class QueryRequest(BaseModel):
     top_k: int | None = Field(default=None, ge=1, le=20)
 
 
+class Claim(BaseModel):
+    text: str = Field(description="One verified statement, without markers")
+    source_ids: list[str] = Field(description="Sources whose quotes support this claim")
+
+
 class Citation(BaseModel):
     source_id: str = Field(description="Marker used in the answer text, e.g. S1")
     quote: str = Field(description="Verified exact text from the source")
@@ -32,6 +37,8 @@ class RetrievalInfo(BaseModel):
 
 
 class VerificationInfo(BaseModel):
+    claims_supported: int = Field(description="Claims shown: every quote verified")
+    claims_rejected: int = Field(description="Claims dropped: missing or unverifiable evidence")
     citations_verified: int
     citations_rejected: int
     downgraded_from: str | None = Field(
@@ -49,7 +56,11 @@ class Usage(BaseModel):
 class QueryResponse(BaseModel):
     query_id: uuid.UUID
     status: Literal["answered", "partial", "insufficient_context"]
-    answer: str
+    answer: str = Field(description="Built from verified claims only, with [S#] markers")
+    notice: str | None = Field(
+        description="Shown with partial answers, e.g. when unverifiable statements were left out"
+    )
+    claims: list[Claim]
     citations: list[Citation]
     retrieval: RetrievalInfo
     verification: VerificationInfo
